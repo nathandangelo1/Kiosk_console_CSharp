@@ -1,6 +1,7 @@
 ﻿
 using System.Data.SqlTypes;
 using System.Globalization;
+using System.Net.Quic;
 using System.Runtime.InteropServices;
 using System.Xml.Schema;
 
@@ -18,6 +19,7 @@ namespace Kiosk_Console_CSharp
         public Decimal? ccAmount;
         public Decimal change;
 
+        public bool cashback;
         public Decimal cashBackDispensed;
         public Decimal cashBackOwed;
         public decimal total;
@@ -25,21 +27,21 @@ namespace Kiosk_Console_CSharp
 
         public List<Payment> paymentsList = new();
 
-        public Transaction( decimal atotal,System.Guid atransactionNumber, DateTime atransactionDateTime)
+        public Transaction(decimal atotal, System.Guid atransactionNumber, DateTime atransactionDateTime)
         {
             total = atotal;
             transactionNumber = atransactionNumber;
             transactionDate = atransactionDateTime.Date;
             transactionTime = atransactionDateTime.ToLocalTime();
             balance = atotal;
-           
+
         }
     }
     public struct Payment
     {
         public System.Guid transactionNumber;
         public DateTime datetime;
-        
+
         public decimal cashAmount;
         //public int denomIndex;
         public PaymentType paymentType;
@@ -48,20 +50,18 @@ namespace Kiosk_Console_CSharp
         public CardType? ccVendor;
         public Decimal ccAmount;
         public bool declined;
-        public bool? cashBack;
+        // public bool? cashBack;
 
         public Payment(Guid atransactionNumber, DateTime aDateTime, PaymentType apaymentType)
         {
             transactionNumber = atransactionNumber;
             datetime = aDateTime;
             paymentType = apaymentType;
-            //denomIndex = 9999;
         }
         public void ccSuccessful(CardType type, decimal approvedAmount, bool success = true)
         {
             this.success = true;
             this.ccVendor = type;
-           // this.amount = approvedAmount;
             this.ccAmount = approvedAmount;
             this.paymentType = PaymentType.Card;
         }
@@ -82,54 +82,64 @@ namespace Kiosk_Console_CSharp
             CashDrawer drawer = new CashDrawer();
             int userSelection;
             bool success;
+            bool quit = false;
             do
             {
-                Console.WriteLine("Press 1 to begin transaction");
-                success = int.TryParse(Console.ReadLine(), out userSelection);
-            } while (success == false || userSelection != 1);
+                do
+                {
+                    Console.WriteLine("Press 1 to begin transaction.");
+                    success = int.TryParse(Console.ReadLine(), out userSelection);
+                } while (success == false || !(userSelection == 1 || userSelection == 9));
 
-            if (userSelection == 1)
-            {
-                TransactionFunction(drawer);
-            }
-
+                if (userSelection == 1)
+                {
+                    TransactionFunction(drawer);
+                }
+                else if (userSelection == 9)
+                {
+                    quit = true;
+                }
+            } while (quit == false);
             Console.ReadLine();
         }
         static void TransactionFunction(CashDrawer drawer)
         {
-
             bool insuffChange = false;
 
             decimal total = InputItems();
 
-            Transaction transaction = new(total, System.Guid.NewGuid(), new DateTime());
-
-            transaction.total = total;
-            transaction.balance = transaction.total;
-
-            Payments(transaction, drawer);
-
-            if (transaction.change < 0)
+            if (total > 0)
             {
-                decimal changeTotal = (decimal)transaction.change;
-            
-                changeTotal = Math.Abs(changeTotal);
 
-                int[] changeCounts = new int[13];
-                bool changeCounted = GetChangeCounts(changeCounts, changeTotal, drawer);
+                Transaction transaction = new(total, Guid.NewGuid(), new DateTime());
 
-                if (changeCounted)
+                transaction.total = total;
+                transaction.balance = transaction.total;
+
+                Payments(transaction, drawer);
+
+                if (transaction.change < 0)
                 {
-                    GiveChange(changeCounts, drawer);
-                }
-                else
-                {
-                    Console.WriteLine("Insufficient Change");
-                    insuffChange = true;
-                }
-                if (insuffChange)
-                {
-                    Console.WriteLine("Alternatives...");
+                    decimal changeTotal = (decimal)transaction.change;
+
+                    changeTotal = Math.Abs(changeTotal);
+
+                    int[] changeCounts = new int[13];
+                    bool changeCounted = GetChangeCounts(changeCounts, changeTotal, drawer);
+
+                    if (changeCounted)
+                    {
+                        GiveChange(changeCounts, drawer);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Insufficient Change");
+                        insuffChange = true;
+                    }
+                    if (insuffChange)
+                    {
+                        Console.WriteLine("Alternatives...");
+                    }
                 }
             }
             //Console.ReadLine();
@@ -167,7 +177,10 @@ namespace Kiosk_Console_CSharp
                 do
                 {
                     Console.WriteLine("Balance Due: " + transaction.balance.ToString("C", CultureInfo.CurrentCulture));
-                    Console.WriteLine("Press 1 to enter cash");
+                    if (transaction.cashback == false)
+                    {
+                        Console.WriteLine("Press 1 to enter cash");
+                    }
                     Console.WriteLine("Press 2 to enter credit/debit");
                     //Console.WriteLine("Press 9 to cancel");
                     successful = int.TryParse(Console.ReadLine(), out userSelection);
@@ -175,29 +188,29 @@ namespace Kiosk_Console_CSharp
 
                 if (userSelection == 1)
                 {
-                    
+
                     payment = GetCashPayments(transaction, drawer);
                     transaction.totalCashRecieved = payment.cashAmount;
                     transaction.paymentsList.Add(payment);
-                    
-                    
+
+
                 }
                 else if (userSelection == 2)
                 {
-                    Console.WriteLine("Balance due:"+ transaction.balance.ToString("C", CultureInfo.CurrentCulture)); 
+                    Console.WriteLine("Balance due:" + transaction.balance.ToString("C", CultureInfo.CurrentCulture));
                     //CCTest();
                     payment = GetCardPayment(transaction, drawer);
-                   
+
                     //move balance reduction to moment of acceptance/approval
                     transaction.balance -= payment.ccAmount;
                     transaction.ccAmount += payment.ccAmount;
                     transaction.paymentsList.Add(payment);
                     totalPayments = GetPaymentsTotal(transaction.paymentsList);
-                    
-                   // if(totalPayments > transaction.total)
-                    if( payment.cashBack == true && transaction.cashBackOwed > 0 )
+
+                    if (totalPayments > transaction.total)
+                    // if( transaction.cashback == true && transaction.cashBackOwed > 0 )
                     {
-                        if( transaction.balance > 0)
+                        if (transaction.balance > 0)
                         {
                             Console.WriteLine("ERROR. Payments: balance > 0 ");
                         }
@@ -212,7 +225,7 @@ namespace Kiosk_Console_CSharp
                 }
 
             } while (transaction.balance > 0);
- 
+
         }
 
         private static Payment GetCardPayment(Transaction transaction, CashDrawer drawer)
@@ -222,27 +235,32 @@ namespace Kiosk_Console_CSharp
             string creditCardNumber = "4716023102375986";  // Visa
             bool valid = false;
             string[] APIresponse;
-            int cashbackPreApproval;
+            int cashbackPreApproval = 0;
             //decimal approvedAmount;
             decimal totalAmountDue;
+            bool cashBackRequested = false;
+            decimal totalCash = drawer.GetTotalCashInDrawer();
 
-            Console.WriteLine("Cash Back?  y/n");
-            string input = Console.ReadLine();
-            if (input == "y")
+            if (transaction.cashBackOwed == 0)
             {
-                cashbackPreApproval = CashBack();
-            }
-            else
-            {
-                cashbackPreApproval = 0;
+                Console.WriteLine("Cash Back?  y/n");
+                string input = Console.ReadLine();
+                if (input == "y")
+                {
+                    cashbackPreApproval = CashBack(drawer, totalCash);
+                    if (cashbackPreApproval > 0)
+                    {
+                        cashBackRequested = true;
+                    }
+                }
             }
 
             totalAmountDue = transaction.balance + cashbackPreApproval;
 
             do
             {
-                decimal ccPaymentAmount = CcEnterAmount(transaction, payment, totalAmountDue);
-                if (ccPaymentAmount != 0)
+                //decimal ccPaymentAmount = CcEnterAmount(transaction, payment, totalAmountDue);
+                if (totalAmountDue != 0)
                 {
                     Console.WriteLine("Please enter card number. Use dash '-' or space ' ' between segments. Format: 0000-0000-0000-0000");
                     string userInput = Console.ReadLine();
@@ -253,7 +271,7 @@ namespace Kiosk_Console_CSharp
                     {
                         type = CreditCardFunctions.FindType(creditCardNumber);
                         Console.WriteLine(type);
-                        APIresponse = CreditCardFunctions.MoneyRequest(creditCardNumber, ccPaymentAmount);
+                        APIresponse = CreditCardFunctions.MoneyRequest(creditCardNumber, totalAmountDue);
 
                         if (APIresponse[1] == "declined")
                         {
@@ -267,29 +285,44 @@ namespace Kiosk_Console_CSharp
                             bool parseSuccess = decimal.TryParse(APIresponse[1], out decimal approvedAmount);
                             if (parseSuccess == true && approvedAmount > 0)
                             {
-                                if (cashbackPreApproval == 0 && approvedAmount == totalAmountDue)
+                                if (cashBackRequested == false && approvedAmount <= totalAmountDue)
                                 {
                                     Console.WriteLine("Transaction Approved");
                                     Console.WriteLine($"{type}: Approved amount: {approvedAmount.ToString("C", CultureInfo.CurrentCulture)}");
 
-                                   // Console.WriteLine(approvedAmount.ToString("C", CultureInfo.CurrentCulture) + " charged successfully to " + type);
                                     payment.ccSuccessful(type, approvedAmount);
-                                    //payment.success = true;
-                                    //payment.ccVendor = type;
-                                    //payment.ccAmount = approvedAmount;
-                                    ////payment.ccAmount = approvedAmount;
-                                    //payment.paymentType = PaymentType.Card;
-                                }else if (cashbackPreApproval > 0 && approvedAmount == totalAmountDue && cashbackPreApproval <= drawer.GetTotalCashInDrawer())
-                                {
-                                    payment.ccSuccessful(type, approvedAmount);
-                                    payment.cashBack = true;
-                                    transaction.cashBackOwed = cashbackPreApproval;
-                                } else if(cashbackPreApproval > 0 && approvedAmount < totalAmountDue && cashbackPreApproval <= drawer.GetTotalCashInDrawer())
-                                {
-                                    Console.WriteLine("CashBack Cancelled. Insufficient Funds");
-                                    Console.WriteLine($"Approved amount: {approvedAmount.ToString("C", CultureInfo.CurrentCulture)}");
+                                    return payment;
                                 }
-                                return payment;
+
+                                else if (cashBackRequested && approvedAmount == totalAmountDue)
+                                {
+                                    Console.WriteLine("Transaction Approved");
+                                    Console.WriteLine($"{type}: Approved amount: {approvedAmount.ToString("C", CultureInfo.CurrentCulture)}");
+
+                                    payment.ccSuccessful(type, approvedAmount);
+                                    transaction.cashback = true;
+                                    transaction.cashBackOwed = cashbackPreApproval;
+                                    return payment;
+
+                                }
+                                else if (cashBackRequested && approvedAmount < totalAmountDue)
+                                {
+                                    Console.WriteLine("Transaction Partially Approved:");
+                                    Console.WriteLine($"{type}: Approved amount: {approvedAmount.ToString("C", CultureInfo.CurrentCulture)}");
+
+                                    payment.ccSuccessful(type, approvedAmount);
+                                    transaction.cashback = true;
+                                    transaction.cashBackOwed = cashbackPreApproval;
+                                    return payment;
+
+                                }
+                                else
+                                {
+                                    payment.success = false;
+                                    Console.WriteLine("Error- GetCardPayment");
+                                    Console.WriteLine($"Approved amount: {approvedAmount.ToString("C", CultureInfo.CurrentCulture)}");
+                                    return payment;
+                                }
                             }
                         }
                     }
@@ -305,59 +338,59 @@ namespace Kiosk_Console_CSharp
             return payment;
 
         }
-            
-        static decimal CcEnterAmount(Transaction transaction, Payment payment, decimal amountdue)
-        {
-            bool success;
-            bool successfull;
-            int choice;
-            string userSelection;
-            string[] splitString;
-            bool valid = false;
-            decimal partialAmount = 0M;
 
-            Console.WriteLine("Amount Due: "+ amountdue.ToString("C", CultureInfo.CurrentCulture));
-            Console.WriteLine("1 for full amount");
-            Console.WriteLine("3 for partial amount");
+        //static decimal CcEnterAmount(Transaction transaction, Payment payment, decimal amountdue)
+        //{
+        //    bool success;
+        //    bool successfull;
+        //    int choice;
+        //    string userSelection;
+        //    string[] splitString;
+        //    bool valid = false;
+        //    decimal partialAmount = 0M;
 
-            userSelection = Console.ReadLine();
-            success = int.TryParse(userSelection, out choice);
+        //    Console.WriteLine("Amount Due: "+ amountdue.ToString("C", CultureInfo.CurrentCulture));
+        //    Console.WriteLine("1 for full amount");
+        //    Console.WriteLine("3 for partial amount");
 
-            if (success == true && choice == 1)
-            {
-                return amountdue;
-            }
-            else if (choice == 3)
-            {
-                do
-                {
-                    Console.WriteLine("Enter amount to two decimal places. Example: 34.01");
-                    //Console.WriteLine("Format: #####.##");
-                    string stringValue = Console.ReadLine();
-                    successfull = decimal.TryParse(stringValue, out partialAmount);
-                    if (successfull && stringValue.Contains('.') && (partialAmount < amountdue))
-                    {
-                        splitString = stringValue.Split(".");
-                        if (splitString.Length != 2 || splitString[1].Length != 2)
-                        {
-                            valid = false;
-                            Console.WriteLine("Error. Try Again.");
-                            continue;
-                        }
-                        valid = true;
-                    }
-                    else if (stringValue == "exit")
-                    {
-                        return 0;
-                    }
+        //    userSelection = Console.ReadLine();
+        //    success = int.TryParse(userSelection, out choice);
+
+        //    if (success == true && choice == 1)
+        //    {
+        //        return amountdue;
+        //    }
+        //    else if (choice == 3)
+        //    {
+        //        do
+        //        {
+        //            Console.WriteLine("Enter amount to two decimal places. Example: 34.01");
+        //            //Console.WriteLine("Format: #####.##");
+        //            string stringValue = Console.ReadLine();
+        //            successfull = decimal.TryParse(stringValue, out partialAmount);
+        //            if (successfull && stringValue.Contains('.') && (partialAmount < amountdue))
+        //            {
+        //                splitString = stringValue.Split(".");
+        //                if (splitString.Length != 2 || splitString[1].Length != 2)
+        //                {
+        //                    valid = false;
+        //                    Console.WriteLine("Error. Try Again.");
+        //                    continue;
+        //                }
+        //                valid = true;
+        //            }
+        //            else if (stringValue == "exit")
+        //            {
+        //                return 0;
+        //            }
 
 
-                } while (valid == false);
-            }
-            return partialAmount;
-        }
-    
-        static int CashBack()
+        //        } while (valid == false);
+        //    }
+        //    return partialAmount;
+        //}
+
+        static int CashBack(CashDrawer drawer, decimal totalCash)
         {
             bool success;
             int amount;
@@ -376,10 +409,18 @@ namespace Kiosk_Console_CSharp
                 {
                     success = int.TryParse(input, out amount);
 
-                    if (success && amount % 10 == 0)
+                    if (success && amount % 10 == 0 && amount < totalCash)
                     {
                         modSuccess = true;
                         return amount;
+                    }
+                    else if (amount > totalCash)
+                    {
+                        Console.WriteLine("Requested amount too large.");
+                    }
+                    else
+                    {
+                        Console.WriteLine("CashBack Error.");
                     }
                 }
             } while (modSuccess == false);
@@ -425,7 +466,7 @@ namespace Kiosk_Console_CSharp
                 transaction.change = transaction.balance;
 
                 Console.WriteLine($"Change Due: {transaction.change.ToString("C", CultureInfo.CurrentCulture)}");
-               
+
             }
             else if (transaction.balance == 0)
             {
@@ -450,7 +491,7 @@ namespace Kiosk_Console_CSharp
                 valid = false;
                 splitString = Array.Empty<string>();
 
-                
+
                 Console.Write("$");
                 string? stringValue = Console.ReadLine();
                 parseSuccess = decimal.TryParse(stringValue, out value);
@@ -469,10 +510,10 @@ namespace Kiosk_Console_CSharp
                         if (drawer.values[i] == value)
                         {
                             denomIndex = i;
-                            valid= true;
+                            valid = true;
                         }
                     }
-                    if(valid == false)
+                    if (valid == false)
                     {
                         Console.WriteLine("Error. Try again.");
                     }
@@ -486,7 +527,7 @@ namespace Kiosk_Console_CSharp
                     valid = false;
                     Console.WriteLine("Error. Try Again.");
                 }
-                
+
             } while (valid == false);
 
             return (value, denomIndex, false);
@@ -612,4 +653,4 @@ namespace Kiosk_Console_CSharp
         }
     }
 }
-        
+
