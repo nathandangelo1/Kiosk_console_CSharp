@@ -1,250 +1,85 @@
-﻿using System.Reflection.Metadata.Ecma335;
-using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
-using System.Windows.Markup;
-using System.Xml.Linq;
+﻿
+using System.Data.SqlTypes;
+using System.Globalization;
+using System.Runtime.InteropServices;
+using System.Xml.Schema;
+
+//Console.WriteLine(value.ToString("C", CultureInfo.CurrentCulture));
 
 namespace Kiosk_Console_CSharp
 {
-
-    public class CashDrawer
+    public class Transaction
     {
-        public const decimal pennyDec = .01M, nickelDec = .05M, dimeDec = .10M, quarterDec = .25M, halfdollarDec = .50M, dollarCoinDec = 1.00M, dollarDec = 1.00M, twoDollarDec = 2.00M, fiveDec = 5.00M, tenDec = 10.00M, twentyDec = 20.00M, fiftyDec = 50.00M, hundredDec = 100.00M;
+        public System.Guid transactionNumber;
+        public DateTime transactionDate;
+        public DateTime transactionTime;
+        public Decimal? totalCashRecieved;
+        public string? ccVendor;
+        public Decimal? ccAmount;
+        public Decimal change;
 
-        public readonly decimal[] values = { hundredDec, fiftyDec, twentyDec, tenDec, fiveDec, twoDollarDec, dollarDec, dollarCoinDec, halfdollarDec, quarterDec, dimeDec, nickelDec, pennyDec };
-        public readonly string[] valueNames = { "hundreds", "fifties", "twenties", "tens", "fives", "twos", "dollars", "dollarCoin", "halfdollar", "quarters", "dimes", "nickels", "pennies" };
+        public Decimal cashBackDispensed;
+        public Decimal cashBackOwed;
+        public decimal total;
+        public decimal balance;
 
-        public decimal[] cashInDrawer;
+        public List<Payment> paymentsList = new();
 
-
-
-        private decimal _pennyCount, _nickelCount, _dimeCount, _quarterCount, _halfDollarCount, _dollarCoinCount, _dollarCount, _twoDollarCount, _fiveCount, _tenCount, _twentyCount, _fiftyCount, _hundredCount;
-
-        //Properties
-        #region
-        public decimal Pennies
+        public Transaction( decimal atotal,System.Guid atransactionNumber, DateTime atransactionDateTime)
         {
-            get
-            {
-                return _pennyCount;
-            }
-            set
-            {
-                if (value > 0)
-                {
-                    _pennyCount = value;
-                }
-            }
-        }
-        public decimal Nickels
-        {
-            get
-            {
-                return _nickelCount;
-            }
-            set
-            {
-                if (value > 0)
-                {
-                    _nickelCount = value;
-                }
-            }
-        }
-        public decimal Dimes
-        {
-            get
-            {
-                return _dimeCount;
-            }
-            set
-            {
-                if (value > 0)
-                {
-                    _dimeCount = value;
-                }
-            }
-        }
-        public decimal Quarters
-        {
-            get
-            {
-                return _quarterCount;
-            }
-            set
-            {
-                if (value > 0)
-                {
-                    _quarterCount = value;
-                }
-            }
-        }
-        public decimal Halfdollars
-        {
-            get
-            {
-                return _halfDollarCount;
-            }
-            set
-            {
-                if (value > 0)
-                {
-                    _halfDollarCount = value;
-                }
-            }
-        }
-        public decimal DollarCoins
-        {
-            get
-            {
-                return _dollarCoinCount;
-            }
-            set
-            {
-                if (value > 0)
-                {
-                    _dollarCoinCount = value;
-                }
-            }
-        }
-        public decimal Dollars
-        {
-            get
-            {
-                return _dollarCount;
-            }
-            set
-            {
-                if (value > 0)
-                {
-                    _dollarCount = value;
-                }
-            }
-        }
-        public decimal TwoDollars
-        {
-            get
-            {
-                return _twoDollarCount;
-            }
-            set
-            {
-                if (value > 0)
-                {
-                    _twoDollarCount = value;
-                }
-            }
-        }
-        public decimal Fives
-        {
-            get
-            {
-                return _fiveCount;
-            }
-            set
-            {
-                if (value > 0)
-                {
-                    _fiveCount = value;
-                }
-            }
-        }
-        public decimal Tens
-        {
-            get
-            {
-                return _tenCount;
-            }
-            set
-            {
-                if (value > 0)
-                {
-                    _tenCount = value;
-                }
-            }
-        }
-        public decimal Twenties
-        {
-            get
-            {
-                return _twentyCount;
-            }
-            set
-            {
-                if (value > 0)
-                {
-                    _twentyCount = value;
-                }
-            }
-        }
-        public decimal Fifties
-        {
-            get
-            {
-                return _fiftyCount;
-            }
-            set
-            {
-                if (value > 0)
-                {
-                    _fiftyCount = value;
-                }
-            }
-        }
-        public decimal Hundreds
-        {
-            get
-            {
-                return _hundredCount;
-            }
-            set
-            {
-                if (value > 0)
-                {
-                    _hundredCount = value;
-                }
-            }
-        }
-        #endregion//
-
-        public CashDrawer(decimal apennyCount = 1.00M, decimal anickelCount = 4.00M, decimal adimeCount = 10.00M, decimal aquarterCount = 20.00M, decimal ahalfDollarCount = 0.00M, decimal adollarCoinCount = 0.00M, decimal adollarCount = 100.00M, decimal atwoDollarCount = 0.00M, decimal afiveCount = 100.00M, decimal atenCount = 250.00M, decimal atwentyCount = 500.00M, decimal afiftyCount = 0.00M, decimal ahundredCount = 500.00M)
-        {
-            cashInDrawer = new decimal[13];
-
-            Pennies = apennyCount;
-            Nickels = anickelCount;
-            Dimes = adimeCount;
-            Quarters = aquarterCount;
-            Halfdollars = ahalfDollarCount;
-            DollarCoins = adollarCoinCount;
-            Dollars = adollarCount;
-            TwoDollars = atwoDollarCount;
-            Fives = afiveCount;
-            Tens = atenCount;
-            Twenties = atwentyCount;
-            Fifties = afiftyCount;
-            Hundreds = ahundredCount;
-
-            cashInDrawer[0] = _hundredCount;
-            cashInDrawer[1] = _fiftyCount;
-            cashInDrawer[2] = _twentyCount;
-            cashInDrawer[3] = _tenCount;
-            cashInDrawer[4] = _fiveCount;
-            cashInDrawer[5] = _twoDollarCount;
-            cashInDrawer[6] = _dollarCount;
-            cashInDrawer[7] = _dollarCoinCount;
-            cashInDrawer[8] = _halfDollarCount;
-            cashInDrawer[9] = _quarterCount;
-            cashInDrawer[10] = _dimeCount;
-            cashInDrawer[11] = _nickelCount;
-            cashInDrawer[12] = _pennyCount;
-
+            total = atotal;
+            transactionNumber = atransactionNumber;
+            transactionDate = atransactionDateTime.Date;
+            transactionTime = atransactionDateTime.ToLocalTime();
+            balance = atotal;
+           
         }
     }
+    public struct Payment
+    {
+        public System.Guid transactionNumber;
+        public DateTime datetime;
+        
+        public decimal cashAmount;
+        //public int denomIndex;
+        public PaymentType paymentType;
+        public bool success;
+
+        public CardType? ccVendor;
+        public Decimal ccAmount;
+        public bool declined;
+        public bool? cashBack;
+
+        public Payment(Guid atransactionNumber, DateTime aDateTime, PaymentType apaymentType)
+        {
+            transactionNumber = atransactionNumber;
+            datetime = aDateTime;
+            paymentType = apaymentType;
+            //denomIndex = 9999;
+        }
+        public void ccSuccessful(CardType type, decimal approvedAmount, bool success = true)
+        {
+            this.success = true;
+            this.ccVendor = type;
+           // this.amount = approvedAmount;
+            this.ccAmount = approvedAmount;
+            this.paymentType = PaymentType.Card;
+        }
+    }
+    public enum PaymentType
+    {
+        Cash, Card
+    }
+    public enum CardType
+    {
+        MasterCard, Visa, AmericanExpress, Discover, JCB
+    };
 
     partial class Program
     {
         static void Main(string[] args)
         {
+            CashDrawer drawer = new CashDrawer();
             int userSelection;
             bool success;
             do
@@ -255,25 +90,29 @@ namespace Kiosk_Console_CSharp
 
             if (userSelection == 1)
             {
-                Transaction();
+                TransactionFunction(drawer);
             }
+
+            Console.ReadLine();
         }
-        static void Transaction()
+        static void TransactionFunction(CashDrawer drawer)
         {
+
             bool insuffChange = false;
-            CashDrawer drawer = new CashDrawer();
 
             decimal total = InputItems();
 
-            decimal changeTotal = Payments(total, drawer);
+            Transaction transaction = new(total, System.Guid.NewGuid(), new DateTime());
 
-            if (changeTotal == 0)
+            transaction.total = total;
+            transaction.balance = transaction.total;
+
+            Payments(transaction, drawer);
+
+            if (transaction.change < 0)
             {
-
-            }
-            else
-            {
-
+                decimal changeTotal = (decimal)transaction.change;
+            
                 changeTotal = Math.Abs(changeTotal);
 
                 int[] changeCounts = new int[13];
@@ -293,7 +132,7 @@ namespace Kiosk_Console_CSharp
                     Console.WriteLine("Alternatives...");
                 }
             }
-            Console.ReadLine();
+            //Console.ReadLine();
         }
 
         static void GiveChange(int[] changeCounts, CashDrawer drawer) // DISPENSES CHANGE FROM DENOMS IN DRAWER, DEDUCTS VALUE FROM CASHINDRAWER
@@ -311,95 +150,307 @@ namespace Kiosk_Console_CSharp
                 }
             }
         }
-        static decimal Payments(decimal total, CashDrawer drawer)
+        static void Payments(Transaction transaction, CashDrawer drawer)
         {
             bool success;
-            decimal originalTotal = total;
-            (decimal, int) value;
+            decimal totalPayments = 0M;
+            //decimal originalTotal = transaction.total;
+            Payment payment;
             decimal change = 0M;
             string creditCardNumber = "378282246310005";  // American Express
 
-            Console.WriteLine($"Total Due: {total}");
+            //Console.WriteLine($"Balance Due: {transaction.total.ToString("C", CultureInfo.CurrentCulture)}");
             do
             {
                 int userSelection;
                 bool successful = false;
                 do
                 {
+                    Console.WriteLine("Balance Due: " + transaction.balance.ToString("C", CultureInfo.CurrentCulture));
                     Console.WriteLine("Press 1 to enter cash");
                     Console.WriteLine("Press 2 to enter credit/debit");
-                    Console.WriteLine("Press 9 to cancel");
+                    //Console.WriteLine("Press 9 to cancel");
                     successful = int.TryParse(Console.ReadLine(), out userSelection);
                 } while (successful == false || userSelection < 1 || userSelection > 3);
 
                 if (userSelection == 1)
                 {
-                    value = GetPaymentByDenom(total, drawer);
+                    
+                    payment = GetCashPayments(transaction, drawer);
+                    transaction.totalCashRecieved = payment.cashAmount;
+                    transaction.paymentsList.Add(payment);
+                    
+                    
                 }
-                else /*(userSelection == 2)*/
+                else if (userSelection == 2)
                 {
+                    Console.WriteLine("Balance due:"+ transaction.balance.ToString("C", CultureInfo.CurrentCulture)); 
                     //CCTest();
-                    value = GetCardPayment(total, drawer);
+                    payment = GetCardPayment(transaction, drawer);
+                   
+                    //move balance reduction to moment of acceptance/approval
+                    transaction.balance -= payment.ccAmount;
+                    transaction.ccAmount += payment.ccAmount;
+                    transaction.paymentsList.Add(payment);
+                    totalPayments = GetPaymentsTotal(transaction.paymentsList);
+                    
+                   // if(totalPayments > transaction.total)
+                    if( payment.cashBack == true && transaction.cashBackOwed > 0 )
+                    {
+                        if( transaction.balance > 0)
+                        {
+                            Console.WriteLine("ERROR. Payments: balance > 0 ");
+                        }
+                        //payment.cashBack = true;
+                        //transaction.cashBackOwed = payment.amount - transaction.balance;
+                        transaction.change -= transaction.cashBackOwed;
+                    }
                 }
-                //else
-                //{
-
-                //}
-
-                total -= value.Item1;
-                drawer.cashInDrawer[value.Item2] += value.Item1;
-
-                if (total > 0)
+                if (totalPayments >= transaction.balance)
                 {
-                    Console.WriteLine($"Amount Remaining: {total}");
+                    return;
                 }
-            } while (total > 0);
 
-            if (total < 0)
+            } while (transaction.balance > 0);
+ 
+        }
+
+        private static Payment GetCardPayment(Transaction transaction, CashDrawer drawer)
+        {
+            Payment payment = new Payment(transaction.transactionNumber, DateTime.Now, PaymentType.Card);
+            CardType type;
+            string creditCardNumber = "4716023102375986";  // Visa
+            bool valid = false;
+            string[] APIresponse;
+            int cashbackPreApproval;
+            //decimal approvedAmount;
+            decimal totalAmountDue;
+
+            Console.WriteLine("Cash Back?  y/n");
+            string input = Console.ReadLine();
+            if (input == "y")
             {
-                change = total;
-                Console.WriteLine($"Change Due: {change}");
+                cashbackPreApproval = CashBack();
             }
-            else if (total == 0)
+            else
+            {
+                cashbackPreApproval = 0;
+            }
+
+            totalAmountDue = transaction.balance + cashbackPreApproval;
+
+            do
+            {
+                decimal ccPaymentAmount = CcEnterAmount(transaction, payment, totalAmountDue);
+                if (ccPaymentAmount != 0)
+                {
+                    Console.WriteLine("Please enter card number. Use dash '-' or space ' ' between segments. Format: 0000-0000-0000-0000");
+                    string userInput = Console.ReadLine();
+
+                    valid = CreditCardFunctions.IsValid(creditCardNumber);
+
+                    if (valid)
+                    {
+                        type = CreditCardFunctions.FindType(creditCardNumber);
+                        Console.WriteLine(type);
+                        APIresponse = CreditCardFunctions.MoneyRequest(creditCardNumber, ccPaymentAmount);
+
+                        if (APIresponse[1] == "declined")
+                        {
+                            Console.WriteLine(" Card Declined by bank.");
+                            payment.success = false;
+                            payment.declined = true;
+                            return payment;
+                        }
+                        else
+                        {
+                            bool parseSuccess = decimal.TryParse(APIresponse[1], out decimal approvedAmount);
+                            if (parseSuccess == true && approvedAmount > 0)
+                            {
+                                if (cashbackPreApproval == 0 && approvedAmount == totalAmountDue)
+                                {
+                                    Console.WriteLine("Transaction Approved");
+                                    Console.WriteLine($"{type}: Approved amount: {approvedAmount.ToString("C", CultureInfo.CurrentCulture)}");
+
+                                   // Console.WriteLine(approvedAmount.ToString("C", CultureInfo.CurrentCulture) + " charged successfully to " + type);
+                                    payment.ccSuccessful(type, approvedAmount);
+                                    //payment.success = true;
+                                    //payment.ccVendor = type;
+                                    //payment.ccAmount = approvedAmount;
+                                    ////payment.ccAmount = approvedAmount;
+                                    //payment.paymentType = PaymentType.Card;
+                                }else if (cashbackPreApproval > 0 && approvedAmount == totalAmountDue && cashbackPreApproval <= drawer.GetTotalCashInDrawer())
+                                {
+                                    payment.ccSuccessful(type, approvedAmount);
+                                    payment.cashBack = true;
+                                    transaction.cashBackOwed = cashbackPreApproval;
+                                } else if(cashbackPreApproval > 0 && approvedAmount < totalAmountDue && cashbackPreApproval <= drawer.GetTotalCashInDrawer())
+                                {
+                                    Console.WriteLine("CashBack Cancelled. Insufficient Funds");
+                                    Console.WriteLine($"Approved amount: {approvedAmount.ToString("C", CultureInfo.CurrentCulture)}");
+                                }
+                                return payment;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Card Number Invalid. Try again. Or enter \"exit\" to quit.");
+                    }
+                }
+
+
+            } while (!valid || creditCardNumber != "exit");
+
+            return payment;
+
+        }
+            
+        static decimal CcEnterAmount(Transaction transaction, Payment payment, decimal amountdue)
+        {
+            bool success;
+            bool successfull;
+            int choice;
+            string userSelection;
+            string[] splitString;
+            bool valid = false;
+            decimal partialAmount = 0M;
+
+            Console.WriteLine("Amount Due: "+ amountdue.ToString("C", CultureInfo.CurrentCulture));
+            Console.WriteLine("1 for full amount");
+            Console.WriteLine("3 for partial amount");
+
+            userSelection = Console.ReadLine();
+            success = int.TryParse(userSelection, out choice);
+
+            if (success == true && choice == 1)
+            {
+                return amountdue;
+            }
+            else if (choice == 3)
+            {
+                do
+                {
+                    Console.WriteLine("Enter amount to two decimal places. Example: 34.01");
+                    //Console.WriteLine("Format: #####.##");
+                    string stringValue = Console.ReadLine();
+                    successfull = decimal.TryParse(stringValue, out partialAmount);
+                    if (successfull && stringValue.Contains('.') && (partialAmount < amountdue))
+                    {
+                        splitString = stringValue.Split(".");
+                        if (splitString.Length != 2 || splitString[1].Length != 2)
+                        {
+                            valid = false;
+                            Console.WriteLine("Error. Try Again.");
+                            continue;
+                        }
+                        valid = true;
+                    }
+                    else if (stringValue == "exit")
+                    {
+                        return 0;
+                    }
+
+
+                } while (valid == false);
+            }
+            return partialAmount;
+        }
+    
+        static int CashBack()
+        {
+            bool success;
+            int amount;
+            bool modSuccess = false;
+
+            do
+            {
+                Console.WriteLine("Please enter Cash Back amount in increments of 10. Or enter \"exit\" to return.");
+                Console.WriteLine("Example: 10 or 20 or 50 or 100");
+                string input = Console.ReadLine();
+                if (input == "exit")
+                {
+                    return 0;
+                }
+                else
+                {
+                    success = int.TryParse(input, out amount);
+
+                    if (success && amount % 10 == 0)
+                    {
+                        modSuccess = true;
+                        return amount;
+                    }
+                }
+            } while (modSuccess == false);
+
+            return 0;
+        }
+
+        static Payment GetCashPayments(Transaction transaction, CashDrawer drawer)
+        {
+            //decimal change = 0M;
+            Payment payment = new Payment(transaction.transactionNumber, DateTime.Now, PaymentType.Cash);
+            //payment.transactionNumber = ;
+            //decimal total = transaction.balance;
+            (decimal value, int index, bool finished) exit = (0M, 0, true);
+            bool earlyExit = false;
+
+            Console.WriteLine($"Input payment by individual bill or coin value. Format: ###.##. Example: 10.00.");
+            Console.WriteLine("Enter 'exit' to return to Payment Methods");
+            do
+            {
+                (decimal value, int index, bool finished) cashIn = ValidateCash(drawer);
+                if (cashIn == exit)
+                {
+                    earlyExit = true;
+                }
+                else
+                {
+                    drawer.cashInDrawer[cashIn.index] += cashIn.value;
+                    payment.cashAmount += cashIn.value;
+                    transaction.balance -= cashIn.value;
+                    //transaction.paymentsList.Add(payment);
+
+                    if (transaction.balance > 0)
+                    {
+                        Console.WriteLine($"Amount Remaining: {transaction.balance.ToString("C", CultureInfo.CurrentCulture)}");
+
+                    }
+                }
+            } while (transaction.balance > 0 && earlyExit != true);
+
+            if (transaction.balance < 0)
+            {
+                transaction.change = transaction.balance;
+
+                Console.WriteLine($"Change Due: {transaction.change.ToString("C", CultureInfo.CurrentCulture)}");
+               
+            }
+            else if (transaction.balance == 0)
             {
                 Console.WriteLine($"Transaction Complete.");
-                Console.WriteLine($"Thank you for your payment of ${originalTotal} ");
+
+                Console.WriteLine($"Thank you for your payment of ${transaction.total.ToString("C", CultureInfo.CurrentCulture)} ");
             }
-            return change;
+            payment.success = true;
+            return payment;
         }
-
-        private static (decimal, int) GetCardPayment(decimal total, CashDrawer drawer)
-        {
-             CardType type;
-            string creditCardNumber = "378282246310005";  // American Express
-
-            Console.WriteLine("Please enter card number:");
-            bool valid = IsValid(creditCardNumber);
-
-            if (valid)
-            {
-                type = FindType(creditCardNumber);
-                Console.WriteLine(type);
-            }
-
-
-
-        }
-
-        static (decimal, int) GetPaymentByDenom(decimal total, CashDrawer drawer)
+        static (decimal, int, bool) ValidateCash(CashDrawer drawer)
         {
             bool parseSuccess;
             bool valid;
             string[] splitString;
             decimal value;
-            int denomIndex = 0;
+            int denomIndex = 9999;
+            bool finished;
             do
             {
                 parseSuccess = false;
-                valid = true;
+                valid = false;
                 splitString = Array.Empty<string>();
 
-                Console.WriteLine($"Input payment by individual bill or coin value. Format: ###.##. Example: 10.00 ");
+                
                 Console.Write("$");
                 string? stringValue = Console.ReadLine();
                 parseSuccess = decimal.TryParse(stringValue, out value);
@@ -407,43 +458,38 @@ namespace Kiosk_Console_CSharp
                 if (parseSuccess && stringValue.Contains('.'))
                 {
                     splitString = stringValue.Split(".");
-
                     if (splitString.Length != 2 || splitString[1].Length != 2)
                     {
                         valid = false;
-                        Console.WriteLine("Formatting error. Try Again.");
+                        Console.WriteLine("Error. Try Again.");
                         continue;
                     }
-                }
-                else
-                {
-                    valid = false;
-                    Console.WriteLine("Formatting error. Try Again.");
-                    continue;
-                }
-                bool contained = false;
-                for (int i = 0; i < drawer.values.Length; i++)
-                {
-                    if (drawer.values[i] == value)
+                    for (int i = 0; i < drawer.values.Length; i++)
                     {
-                        contained = true;
-                        denomIndex = i;
-
+                        if (drawer.values[i] == value)
+                        {
+                            denomIndex = i;
+                            valid= true;
+                        }
+                    }
+                    if(valid == false)
+                    {
+                        Console.WriteLine("Error. Try again.");
                     }
                 }
-                if (contained == true)
+                else if (stringValue == "exit")
                 {
-                    valid = true;
+                    return (0M, 0, true);
                 }
                 else
                 {
                     valid = false;
-                    Console.WriteLine("Formatting error. Try Again.");
-
+                    Console.WriteLine("Error. Try Again.");
                 }
+                
             } while (valid == false);
 
-            return (value, denomIndex);
+            return (value, denomIndex, false);
         }
 
         static decimal InputItems()
@@ -452,18 +498,18 @@ namespace Kiosk_Console_CSharp
             decimal total = 0.0M;
             decimal value;
             int itemCount = 1;
-            (decimal, char) itemTuple;
+            (decimal value, bool escape) itemTuple;
 
             do
             {
                 itemTuple = EnterItems(itemCount);
                 itemCount++;
-                total += itemTuple.Item1;
+                total += itemTuple.value;
 
-            } while (itemTuple.Item2 != 'z');
+            } while (itemTuple.escape != true);
             return total;
         }
-        static (decimal, char) EnterItems(int itemCount)
+        static (decimal, bool) EnterItems(int itemCount)
         {
             bool parseSuccess;
             bool valid;
@@ -507,12 +553,12 @@ namespace Kiosk_Console_CSharp
             } while (valid == false && escape != true);
             if (escape == true)
             {
-                return (value, 'z');
+                return (value, escape);
             }
             else
             {
 
-                return (value, 'y');
+                return (value, escape);
             }
         }
 
@@ -554,127 +600,16 @@ namespace Kiosk_Console_CSharp
 
         }//END GETCHANGECOUNTS
 
-        static decimal GetDrawerTotal(CashDrawer drawer1)
+        static decimal GetPaymentsTotal(List<Payment> paymentsList)
         {
-            decimal bank = 0.00M;
-            foreach (var item in drawer1.cashInDrawer)
+            decimal total = 0.00M;
+            foreach (var item in paymentsList)
             {
-                bank += item;
+                total += item.cashAmount + item.ccAmount;
             }
             //Console.WriteLine(bank);
-            return bank;
+            return total;
         }
-        static string[] MoneyRequest(string account_number, decimal amount)
-        {
-            Random rnd = new Random();
-            //50% CHANCE TRANSACTION PASSES OR FAILS
-            bool pass = rnd.Next(100) < 50;
-            //50% CHANCE THAT A FAILED TRANSACTION IS DECLINED
-            bool declined = rnd.Next(100) < 50;
-            if (pass)
-            {
-                return new string[] { account_number, amount.ToString() };
-            }
-            else
-            {
-                if (!declined)
-                {
-                    return new string[] { account_number, (amount / rnd.Next(2, 6)).ToString() };
-                }
-                else
-                {
-                    return new string[] { account_number, "declined" };
-                }//end if
-            }//end if
-        }//end if
-
-        static void CCTest()
-        {
-            string[] cards = new string[] {
-                //http://www.getcreditcardnumbers.com/
-                "378282246310005",  // American Express
-                "4716023102375986", // Visa
-                "6011206705780705", // Discover
-                "5333176180410867", // Mastercard
-            };
-
-            foreach (string card in cards)
-            {
-                Console.WriteLine(IsValid(card));
-            }
-
-            Console.ReadLine();
-        }
-
-        public static bool IsValid(object value)
-        {
-            if (value == null)
-            {
-                return true;
-            }
-
-            string ccValue = value as string;
-            if (ccValue == null)
-            {
-                return false;
-            }
-            ccValue = ccValue.Replace("-", "");
-            ccValue = ccValue.Replace(" ", "");
-
-            int checksum = 0;
-            bool evenDigit = false;
-
-            foreach (char digit in ccValue.Reverse())
-            {
-                if (digit < '0' || digit > '9')
-                {
-                    return false;
-                }
-
-                int digitValue = (digit - '0') * (evenDigit ? 2 : 1);
-                evenDigit = !evenDigit;
-
-                while (digitValue > 0)
-                {
-                    checksum += digitValue % 10;
-                    digitValue /= 10;
-                }
-            }
-
-            return checksum % 10 == 0;
-        }
-
-        public enum CardType
-        {
-            MasterCard, Visa, AmericanExpress, Discover, JCB
-        };
-
-        public static CardType FindType(string cardNumber)
-        {
-            //https://www.regular-expressions.info/creditcard.html
-            if (Regex.Match(cardNumber, @"^4[0-9]{12}(?:[0-9]{3})?$").Success)
-            {
-                return CardType.Visa;
-            }
-
-            if (Regex.Match(cardNumber, @"^(?:5[1-5][0-9]{2}|222[1-9]|22[3-9][0-9]|2[3-6][0-9]{2}|27[01][0-9]|2720)[0-9]{12}$").Success)
-            {
-                return CardType.MasterCard;
-            }
-
-            if (Regex.Match(cardNumber, @"^3[47][0-9]{13}$").Success)
-            {
-                return CardType.AmericanExpress;
-            }
-
-            if (Regex.Match(cardNumber, @"^6(?:011|5[0-9]{2})[0-9]{12}$").Success)
-            {
-                return CardType.Discover;
-            }
-
-            throw new Exception("Unknown card.");
-        }
-
     }
 }
         
