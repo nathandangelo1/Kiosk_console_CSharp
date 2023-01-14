@@ -10,9 +10,8 @@
 
         public decimal[] cashInDrawer;
 
-
-
-        private decimal _pennyCount, _nickelCount, _dimeCount, _quarterCount, _halfDollarCount, _dollarCoinCount, _dollarCount, _twoDollarCount, _fiveCount, _tenCount, _twentyCount, _fiftyCount, _hundredCount;
+        private decimal _pennies, _nickels, _dimes, _quarters, _halfDollars, _dollarCoins, _dollars, _twoDollars, _fives, _tens, _twenties, _fifties, _hundreds;
+        
 
         //Properties
         #region
@@ -20,27 +19,28 @@
         {
             get
             {
-                return _pennyCount;
+                return _pennies;
             }
             set
             {
-                if (value > 0)
+                if (value >= 0 && value % pennyDec == 0)
                 {
-                    _pennyCount = value;
+                    _pennies = value;
                 }
+
             }
         }
         public decimal Nickels
         {
             get
             {
-                return _nickelCount;
+                return _nickels;
             }
             set
             {
-                if (value > 0)
+                if (value >= 0 && value % nickelDec == 0)
                 {
-                    _nickelCount = value;
+                    _nickels = value;
                 }
             }
         }
@@ -48,13 +48,13 @@
         {
             get
             {
-                return _dimeCount;
+                return _dimes;
             }
             set
             {
-                if (value > 0)
+                if (value >= 0 && value % dimeDec == 0)
                 {
-                    _dimeCount = value;
+                    _dimes = value;
                 }
             }
         }
@@ -62,13 +62,13 @@
         {
             get
             {
-                return _quarterCount;
+                return _quarters;
             }
             set
             {
-                if (value > 0)
+                if (value >= 0 && value % quarterDec == 0)
                 {
-                    _quarterCount = value;
+                    _quarters = value;
                 }
             }
         }
@@ -76,13 +76,13 @@
         {
             get
             {
-                return _halfDollarCount;
+                return _halfDollars;
             }
             set
             {
-                if (value > 0)
+                if (value >= 0 && value % halfdollarDec == 0)
                 {
-                    _halfDollarCount = value;
+                    _halfDollars = value;
                 }
             }
         }
@@ -90,13 +90,13 @@
         {
             get
             {
-                return _dollarCoinCount;
+                return _dollarCoins;
             }
             set
             {
-                if (value > 0)
+                if (value >= 0 && value % dollarCoinDec == 0)
                 {
-                    _dollarCoinCount = value;
+                    _dollarCoins = value;
                 }
             }
         }
@@ -104,13 +104,13 @@
         {
             get
             {
-                return _dollarCount;
+                return _dollars;
             }
             set
             {
-                if (value > 0)
+                if (value >= 0 && value % dollarDec == 0)
                 {
-                    _dollarCount = value;
+                    _dollars = value;
                 }
             }
         }
@@ -118,13 +118,13 @@
         {
             get
             {
-                return _twoDollarCount;
+                return _twoDollars;
             }
             set
             {
-                if (value > 0)
+                if (value >= 0 && value % twoDollarDec == 0)
                 {
-                    _twoDollarCount = value;
+                    _twoDollars = value;
                 }
             }
         }
@@ -132,13 +132,13 @@
         {
             get
             {
-                return _fiveCount;
+                return _fives;
             }
             set
             {
-                if (value > 0)
+                if (value >= 0 && value % fiveDec == 0)
                 {
-                    _fiveCount = value;
+                    _fives = value;
                 }
             }
         }
@@ -146,13 +146,13 @@
         {
             get
             {
-                return _tenCount;
+                return _tens;
             }
             set
             {
-                if (value > 0)
+                if (value >= 0 && value % tenDec == 0)
                 {
-                    _tenCount = value;
+                    _tens = value;
                 }
             }
         }
@@ -160,13 +160,13 @@
         {
             get
             {
-                return _twentyCount;
+                return _twenties;
             }
             set
             {
-                if (value > 0)
+                if (value >= 0 && value % pennyDec == 0)
                 {
-                    _twentyCount = value;
+                    _twenties = value;
                 }
             }
         }
@@ -174,13 +174,13 @@
         {
             get
             {
-                return _fiftyCount;
+                return _fifties;
             }
             set
             {
-                if (value > 0)
+                if (value >= 0 && value % fiftyDec == 0)
                 {
-                    _fiftyCount = value;
+                    _fifties = value;
                 }
             }
         }
@@ -188,13 +188,13 @@
         {
             get
             {
-                return _hundredCount;
+                return _hundreds;
             }
             set
             {
-                if (value > 0)
+                if (value >= 0 && value % hundredDec == 0)
                 {
-                    _hundredCount = value;
+                    _hundreds = value;
                 }
             }
         }
@@ -218,19 +218,19 @@
             Fifties = afiftyCount;
             Hundreds = ahundredCount;
 
-            cashInDrawer[0] = _hundredCount;
-            cashInDrawer[1] = _fiftyCount;
-            cashInDrawer[2] = _twentyCount;
-            cashInDrawer[3] = _tenCount;
-            cashInDrawer[4] = _fiveCount;
-            cashInDrawer[5] = _twoDollarCount;
-            cashInDrawer[6] = _dollarCount;
-            cashInDrawer[7] = _dollarCoinCount;
-            cashInDrawer[8] = _halfDollarCount;
-            cashInDrawer[9] = _quarterCount;
-            cashInDrawer[10] = _dimeCount;
-            cashInDrawer[11] = _nickelCount;
-            cashInDrawer[12] = _pennyCount;
+            cashInDrawer[0] = _hundreds;
+            cashInDrawer[1] = _fifties;
+            cashInDrawer[2] = _twenties;
+            cashInDrawer[3] = _tens;
+            cashInDrawer[4] = _fives;
+            cashInDrawer[5] = _twoDollars;
+            cashInDrawer[6] = _dollars;
+            cashInDrawer[7] = _dollarCoins;
+            cashInDrawer[8] = _halfDollars;
+            cashInDrawer[9] = _quarters;
+            cashInDrawer[10] = _dimes;
+            cashInDrawer[11] = _nickels;
+            cashInDrawer[12] = _pennies;
 
         }
 
