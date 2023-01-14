@@ -1,11 +1,6 @@
 ﻿
-using System.Data.SqlTypes;
 using System.Globalization;
-using System.Net.Quic;
-using System.Runtime.InteropServices;
-using System.Xml.Schema;
-
-//Console.WriteLine(value.ToString("C", CultureInfo.CurrentCulture));
+using System.Security.Cryptography.X509Certificates;
 
 namespace Kiosk_Console_CSharp
 {
@@ -18,22 +13,24 @@ namespace Kiosk_Console_CSharp
         public Guid transactionNumber;
         public DateTime transactionDate;
         public DateTime transactionTime;
-        public Decimal totalCashRecieved;
+        public decimal totalCashReceived;
         //public string ccVendor;
-        public Decimal CCtotalRecieved;
-        public Decimal change;
+        public decimal totalCCreceived;
+        public decimal changeOwed;
+        public decimal changeDispensed;
 
         public bool IsCBrequested;
-        public Decimal cashBackDispensed;
-        public Decimal cashBackOwed;
-        public decimal total;
+        public decimal cashBackDispensed;
+        public decimal cashBackOwed;
+        public decimal originalTotal;
+        //public decimal newBalance;
         public decimal balance;
 
         public List<Payment> paymentsList = new();
 
         public Transaction(decimal atotal, System.Guid atransactionNumber, DateTime atransactionDateTime)
         {
-            total = atotal;
+            originalTotal = atotal;
             transactionNumber = atransactionNumber;
             transactionDate = atransactionDateTime.Date;
             transactionTime = atransactionDateTime.ToLocalTime();
@@ -48,15 +45,17 @@ namespace Kiosk_Console_CSharp
 
         public decimal cashAmount;
         //public int denomIndex;
-        
+
         public PaymentType paymentType;
         public bool success;
 
         public CardType? ccVendor;
         public decimal ccAmount;
         public bool declined;
-        public decimal cashBackAmount;
-        public bool IsCBrequested;
+        public decimal declinedAmount;
+        public decimal cashBackReqAmount;
+        public bool IsPartialPayment;
+        //public bool IsCBrequested;
 
         public Payment(Guid atransactionNumber, DateTime aDateTime, PaymentType apaymentType)
         {
@@ -64,41 +63,7 @@ namespace Kiosk_Console_CSharp
             datetime = aDateTime;
             paymentType = apaymentType;
         }
-        //public void ccSuccessful(CardType type, decimal approvedAmount, decimal cashBackAmount)
-        //{
-        //    success = true;
-        //    ccVendor = type;
-        //    ccAmount = approvedAmount;
-        //    paymentType = PaymentType.Card;
-        //    this.cashBackAmount = cashBackAmount;
-            
-        //    if(cashBackAmount > 0)
-        //    {
-        //        IsCBrequested = true;
-        //    }
 
-        //}
-        //public void ccDeclined(CardType type, decimal declinedAmount, decimal cashBackAmount)
-        //{
-        //    success = false;
-        //    declined = true;
-
-        //    ccVendor = type;
-        //    ccAmount = declinedAmount;
-        //    paymentType = PaymentType.Card;
-        //    this.cashBackAmount = cashBackAmount;
-
-        //    if (cashBackAmount > 0)
-        //    {
-        //        IsCBrequested = true;
-        //    }
-        //}
-        //public void cashAccepted(decimal cashAmount)
-        //{
-        //    this.cashAmount = cashAmount;
-        //    success = true;
-        //    paymentType = PaymentType.Cash;
-        //}
     }
     public enum PaymentType
     {
@@ -109,11 +74,14 @@ namespace Kiosk_Console_CSharp
         MasterCard, Visa, AmericanExpress, Discover, JCB
     };
 
-    partial class Program
+    public class Program
     {
         static void Main(string[] args)
         {
             CashDrawer drawer = new();
+
+
+
             int userSelection;
             bool success;
             bool quit = false;
@@ -130,9 +98,9 @@ namespace Kiosk_Console_CSharp
                 if (userSelection == 1)
                 {
                     drawer.Pennies = -1;
-                    Console.WriteLine(drawer.Pennies.ToString()) ;
+                    Console.WriteLine(drawer.Pennies.ToString());
                     TransactionFunction(drawer);
-                    
+
                 }
                 else if (userSelection == 9)
                 {
@@ -143,7 +111,8 @@ namespace Kiosk_Console_CSharp
         }
         static void TransactionFunction(CashDrawer drawer)
         {
-            bool insuffChange = false;
+            decimal totalPayments;
+            //bool insuffChange = false;
 
             decimal total = InputItems();
 
@@ -157,43 +126,70 @@ namespace Kiosk_Console_CSharp
 
                 Payments(transaction, drawer);
 
-                if (transaction.change < 0)
+                totalPayments = GetPaymentsTotal(transaction.paymentsList);
+
+                if (totalPayments >= transaction.originalTotal + transaction.cashBackOwed)
                 {
-
-                    decimal changeTotal = (decimal)transaction.change;
-
-                    changeTotal = Math.Abs(changeTotal);
-
-                    int[] changeCounts = new int[13];
-                    bool changeCounted = GetChangeCounts(changeCounts, changeTotal, drawer);
-
-                    if (changeCounted)
-                    {
-                        bool success = GiveChange(transaction, drawer, changeCounts, changeTotal);
+                    if (transaction.IsCBrequested) {
+                        transaction.changeOwed -= transaction.cashBackOwed;
                     }
-                    else
+                    else 
                     {
-                        Console.WriteLine("Insufficient Change");
-                        insuffChange = true;
-                    }
-                    if (insuffChange)
-                    {
-                        Console.WriteLine("Alternatives...");
+                        transaction.changeOwed -= totalPayments - transaction.originalTotal;
                     }
                 }
+
+                bool changeAndCashBackSuccess = ChangeAndCashBack(transaction, drawer);
+
+                //if (transaction.change < 0)
+                //{
+
+                //    decimal changeTotal = (decimal)transaction.change;
+
+                //    changeTotal = Math.Abs(changeTotal);
+
+                //    int[] changeCounts = new int[13];
+                //    bool changeCounted = GetChangeCounts(changeCounts, changeTotal, drawer);
+
+                //    if (changeCounted)
+                //    {
+                //        bool success = GiveChange(transaction, drawer, changeCounts, changeTotal);
+                //    }
+                //    else
+                //    {
+                //        Console.WriteLine("Insufficient Change");
+                //        insuffChange = true;
+                //    }
+                //    if (insuffChange)
+                //    {
+                //        Console.WriteLine("Alternatives...");
+                //    }
+                //}
+                if (changeAndCashBackSuccess)
+                {
+                    Console.WriteLine("Transaction Completed. Thank you.");
+                }
+                else
+                {
+                    Console.WriteLine("Dispensing Error: TransactionFunction");
+                }
+                
                 TransactionsList.Transactions.Add(transaction);
             }
             //Console.ReadLine();
         }
 
-        static bool GiveChange(Transaction transaction, CashDrawer drawer, int[] changeCounts, decimal changeAmounts ) // DISPENSES CHANGE FROM DENOMS IN DRAWER, DEDUCTS VALUE FROM CASHINDRAWER
+        static bool GiveChange(Transaction transaction, CashDrawer drawer, int[] changeCounts, decimal changeAmounts) // DISPENSES CHANGE FROM DENOMS IN DRAWER, DEDUCTS VALUE FROM CASHINDRAWER
         {
             for (int i = 0; i < changeCounts.Length; i++)
             {
                 if (changeCounts[i] > 0)
                 {
-                    drawer.cashInDrawer[i] -= changeCounts[i] * drawer.values[i];
-                    transaction.balance += changeCounts[i] * drawer.values[i];
+                    decimal dispensedAmount = changeCounts[i] * drawer.values[i];
+
+                    drawer.cashInDrawer[i] -= dispensedAmount;
+                    transaction.balance += dispensedAmount;
+                    transaction.changeDispensed += dispensedAmount;
 
                     for (int j = 0; j < changeCounts[i]; j++)
                     {
@@ -201,7 +197,7 @@ namespace Kiosk_Console_CSharp
                     }
                 }
             }
-            if (transaction.balance == 0)
+            if (transaction.balance == 0 && Math.Abs(transaction.changeOwed) == Math.Abs(transaction.changeDispensed))
             {
                 return true;
             }
@@ -240,8 +236,6 @@ namespace Kiosk_Console_CSharp
                 if (userSelection == 1)
                 {
                     payment = GetCashPayments(transaction, drawer);
-                    //transaction.totalCashRecieved = payment.cashAmount;
-                    //transaction.balance -= payment.cashAmount;
                     transaction.paymentsList.Add(payment);
                 }
                 else if (userSelection == 2)
@@ -259,24 +253,25 @@ namespace Kiosk_Console_CSharp
                     //    //transaction.paymentsList.Add(payment);
                     //}
 
-                    totalPayments = GetPaymentsTotal(transaction.paymentsList);
-                    
-                    if (totalPayments >= transaction.total + transaction.cashBackOwed)
-                    {
-                        transaction.change -= transaction.cashBackOwed;
-                        return;
+                    //totalPayments = GetPaymentsTotal(transaction.paymentsList);
 
-                    }
+                    //if (totalPayments == transaction.balance)
+                    //{
+                    //    transaction.change -= transaction.cashBackOwed;
+                    //    return;
+
+                    //}
                 }
 
-            } while (transaction.balance + transaction.cashBackOwed > 0 /*|| (transaction.balance)*/ );
+            } while (transaction.balance > 0 /*|| (transaction.balance)*/ );
         }
 
         private static Payment GetCardPayment(Transaction transaction, CashDrawer drawer)
         {
             Payment payment = new(transaction.transactionNumber, DateTime.Now, PaymentType.Card);
             CardType type;
-            string creditCardNumber = "4716023102375986";  // Visa
+            string creditCardNumber;
+            string creditCardNumber1 = "4716023102375986";  // Visa
             bool valid = false;
             string[] APIresponse;
             int cashBackAmount = 0;
@@ -297,108 +292,125 @@ namespace Kiosk_Console_CSharp
                     if (cashBackAmount > 0)
                     {
                         transaction.IsCBrequested = true;
-                        
-                       
+                        //transaction.cashBackOwed = cashBackAmount;
+                        transaction.balance += payment.cashBackReqAmount;
+                        payment.cashBackReqAmount = cashBackAmount;
+
                         //payment.IsCBrequested = true;  //  Think about adding/replacing above
                     }
                 }
             }
 
-            totalAmountDue = transaction.balance + cashBackAmount;
+            //totalAmountDue = transaction.balance + cashBackAmount;
+            // totalAmountDue = transaction.balance + transaction.cashBackOwed;
 
             do
             {
                 //decimal ccPaymentAmount = CcEnterAmount(transaction, payment, totalAmountDue);
-                if (totalAmountDue != 0)
+                //if (transaction.total != 0)
+                //{
+                Console.Clear();
+                Console.WriteLine("Please enter card number. Use dash '-' or space ' ' between segments. Format: 0000-0000-0000-0000");
+                string creditCardString = Console.ReadLine();
+
+                creditCardNumber = string.IsNullOrWhiteSpace(creditCardString) ? creditCardNumber1 : creditCardString;
+                //if (string.IsNullOrWhiteSpace(creditCardString))
+                //{
+                //    creditCardNumber = creditCardNumber1;
+                //}
+                //else
+                //{
+                //    creditCardNumber = creditCardString;
+                //}
+
+                valid = CreditCardFunctions.IsValid(creditCardString);
+
+                if (valid)
                 {
-                    Console.Clear();
-                    Console.WriteLine("Please enter card number. Use dash '-' or space ' ' between segments. Format: 0000-0000-0000-0000");
-                    string userInput = Console.ReadLine();
+                    type = CreditCardFunctions.FindType(creditCardString);
+                    Console.WriteLine(type);
+                    APIresponse = CreditCardFunctions.MoneyRequest(creditCardString, transaction.balance);
 
-                    valid = CreditCardFunctions.IsValid(creditCardNumber);
-
-                    if (valid)
+                    if (APIresponse[1] == "declined")
                     {
-                        type = CreditCardFunctions.FindType(creditCardNumber);
-                        Console.WriteLine(type);
-                        APIresponse = CreditCardFunctions.MoneyRequest(creditCardNumber, totalAmountDue);
-
-                        if (APIresponse[1] == "declined")
-                        {
-                            Console.WriteLine(" Card Declined by bank.");
-                            ccDeclined(transaction, payment, type, totalAmountDue, cashBackAmount);
-                            //payment.success = false;
-                            //payment.declined = true;
-                            return payment;
-                        }
-                        else
-                        {
-                            bool parseSuccess = decimal.TryParse(APIresponse[1], out decimal approvedAmount);
-                            if (parseSuccess == true && approvedAmount > 0)
-                            {
-                                if (transaction.IsCBrequested == false && approvedAmount <= totalAmountDue)
-                                {
-                                    Console.WriteLine("Transaction Approved");
-                                    Console.WriteLine($"{type}: Approved amount: {approvedAmount.ToString("C", CultureInfo.CurrentCulture)}");
-
-                                    CCaccepted(transaction, payment, type, approvedAmount, cashBackAmount);
-                                    WaitForKeyorSeconds();
-                                    return payment;
-                                }
-
-                                else if (transaction.IsCBrequested && approvedAmount == totalAmountDue)
-                                {
-                                    Console.WriteLine("Transaction Approved");
-                                    Console.WriteLine($"{type}: Approved amount: {approvedAmount.ToString("C", CultureInfo.CurrentCulture)}");
-
-                                    CCaccepted(transaction, payment, type, approvedAmount, cashBackAmount);
-                                    Console.WriteLine($"Cash back: {cashBackAmount}");
-                                    //transaction.IsCBrequested = true;
-                                   // transaction.cashBackOwed = cashBackAmount;
-                                    //transaction.balance += transaction.cashBackOwed;
-                                    WaitForKeyorSeconds();
-                                    return payment;
-
-                                    //transaction.balance -= payment.ccAmount;
-                                    //transaction.CCtotalRecieved += payment.ccAmount;
-                                    //transaction.paymentsList.Add(payment);
-
-                                }
-                                else if (transaction.IsCBrequested && approvedAmount < totalAmountDue)
-                                {
-                                    Console.WriteLine("Transaction Partially Approved:");
-                                    Console.WriteLine($"{type}: Approved amount: {approvedAmount.ToString("C", CultureInfo.CurrentCulture)}");
-
-                                    CCaccepted(transaction, payment, type, approvedAmount, cashBackAmount);
-                                   // transaction.IsCBrequested = true;
-                                   // transaction.cashBackOwed = cashBackAmount;
-                                    WaitForKeyorSeconds();
-                                    return payment;
-
-                                }
-                                else
-                                {
-                                    payment.success = false;
-                                    Console.WriteLine("Error- GetCardPayment");
-                                    Console.WriteLine($"Approved amount: {approvedAmount.ToString("C", CultureInfo.CurrentCulture)}");
-                                    WaitForKeyorSeconds();
-                                    return payment;
-                                }
-                            }
-                        }
+                        Console.WriteLine(" Card Declined by bank.");
+                        Console.WriteLine($"Declined Amount: {transaction.balance.ToString("C", CultureInfo.CurrentCulture)}.");
+                        ccDeclined(transaction, payment, type);
+                        //payment.success = false;
+                        //payment.declined = true;
+                       // return payment;
                     }
                     else
                     {
-                        Console.WriteLine("Card Number Invalid. Try again. Or enter \"exit\" to quit.");
+                        bool parseSuccess = decimal.TryParse(APIresponse[1], out decimal approvedAmount);
+                        if (parseSuccess == true && approvedAmount > 0)
+                        {
+                            if (approvedAmount == transaction.balance)
+                            {
+                                Console.WriteLine("Transaction Approved");
+                                Console.WriteLine($"{type}: Approved amount: {approvedAmount.ToString("C", CultureInfo.CurrentCulture)}");
+
+                                //if (transaction.IsCBrequested)
+                                //{
+                                //    transaction.cashBackOwed = payment.cashBackReqAmount;
+                                //}
+
+                                CCaccepted(transaction, payment, type, approvedAmount);
+                                WaitForKeyorSeconds();
+                                //return payment;
+                            }
+
+
+                            //else if (transaction.IsCBrequested && approvedAmount == transaction.balance)
+                            //{
+                            //    Console.WriteLine("Transaction Approved");
+                            //    Console.WriteLine($"{type}: Approved amount: {approvedAmount.ToString("C", CultureInfo.CurrentCulture)}");
+
+                            //    CCaccepted(transaction, payment, type, approvedAmount);
+                            //    Console.WriteLine($"Cash back: {transaction.cashBackOwed}");
+                            //    //transaction.IsCBrequested = true;
+                            //    // transaction.cashBackOwed = cashBackAmount;
+                            //    //transaction.balance += transaction.cashBackOwed;
+                            //    WaitForKeyorSeconds();
+                            //    //return payment;
+
+                            //    //transaction.balance -= payment.ccAmount;
+                            //    //transaction.CCtotalRecieved += payment.ccAmount;
+                            //    //transaction.paymentsList.Add(payment);
+
+                            //}
+                            else if ( approvedAmount < transaction.balance )
+                            {
+                                Console.WriteLine("Transaction Partially Approved:");
+                                Console.WriteLine($"{type}: Approved amount: {approvedAmount.ToString("C", CultureInfo.CurrentCulture)}");
+
+                                CCaccepted(transaction, payment, type, approvedAmount);
+                                // transaction.IsCBrequested = true;
+                                // transaction.cashBackOwed = cashBackAmount;
+                                WaitForKeyorSeconds();
+                                //return payment;
+
+                            }
+                            else
+                            {
+                                //payment.success = false;
+                                Console.WriteLine("Error- GetCardPayment");
+                                //Console.WriteLine($"Approved amount: {approvedAmount.ToString("C", CultureInfo.CurrentCulture)}");
+                                WaitForKeyorSeconds(20);
+                                // return payment;
+                            }
+                        }
                     }
                 }
-                
-                
+                else
+                {
+                    Console.WriteLine("Card Number Invalid. Try again. Or enter \"exit\" to quit.");
+                }
+                //}
 
             } while (!valid || creditCardNumber != "exit");
 
-           return payment;
-
+            return payment;
         }
 
         static int GetCashBackAmt(CashDrawer drawer, decimal totalCash)
@@ -463,31 +475,30 @@ namespace Kiosk_Console_CSharp
                     drawer.cashInDrawer[cashIn.index] += cashIn.value;
                     payment.cashAmount += cashIn.value;
                     transaction.balance -= cashIn.value;
-                    transaction.totalCashRecieved += cashIn.value;
+                    transaction.totalCashReceived += cashIn.value;
+                    payment.success = true;
                     //transaction.paymentsList.Add(payment);
 
                     if (transaction.balance > 0)
                     {
                         Console.WriteLine($"Amount Remaining: {transaction.balance.ToString("C", CultureInfo.CurrentCulture)}");
-
                     }
                 }
             } while (transaction.balance > 0 && earlyExit != true);
 
-            if (transaction.balance < 0)
-            {
-                transaction.change = transaction.balance;
+            //if (transaction.balance < 0)
+            //{
+            //    transaction.change = transaction.balance;
 
-                Console.WriteLine($"Change Due: {transaction.change.ToString("C", CultureInfo.CurrentCulture)}");
+            //    Console.WriteLine($"Change Due: {transaction.change.ToString("C", CultureInfo.CurrentCulture)}");
 
-            }
-            else if (transaction.balance == 0)
-            {
-                Console.WriteLine($"Transaction Complete.");
+            //}
+            //else if (transaction.balance == 0)
+            //{
+            //    Console.WriteLine($"Transaction Complete.");
 
-                Console.WriteLine($"Thank you for your payment of ${transaction.total.ToString("C", CultureInfo.CurrentCulture)} ");
-            }
-            payment.success = true;
+            //    Console.WriteLine($"Thank you for your payment of ${transaction.originalTotal.ToString("C", CultureInfo.CurrentCulture)} ");
+            //}
             return payment;
         }
         static (decimal, int, bool) ValidateCash(CashDrawer drawer)
@@ -517,6 +528,13 @@ namespace Kiosk_Console_CSharp
                         valid = false;
                         Console.WriteLine("Error. Try Again.");
                         continue;
+                    }
+                    foreach (var currency in drawer.NameValueDict )
+                    {
+                        if(currency.Value == value)
+                        {
+
+                        }
                     }
                     for (int i = 0; i < drawer.values.Length; i++)
                     {
@@ -636,10 +654,7 @@ namespace Kiosk_Console_CSharp
                         //INCREMENT CHANGECOUNTS
                         changeCounts[i] += temp;
                     }
-                    else
-                    {
 
-                    }
                 }
             }
             //IF EXACT CHANGE IS POSSIBLE
@@ -664,52 +679,95 @@ namespace Kiosk_Console_CSharp
             //Console.WriteLine(bank);
             return total;
         }
-        static void WaitForKeyorSeconds(double seconds=5.0)
+        static void WaitForKeyorSeconds(double seconds = 5.0)
         {
             Console.WriteLine("Press any key to continue");
             Task.Factory.StartNew(() => Console.ReadKey()).Wait(TimeSpan.FromSeconds(seconds));
         }
-        static void CCaccepted(Transaction transaction, Payment payment, CardType type, decimal approvedAmount, decimal cashBackAmount)
+        static void CCaccepted(Transaction transaction, Payment payment, CardType type, decimal approvedAmount)
         {
             payment.success = true;
             payment.ccVendor = type;
             payment.ccAmount = approvedAmount;
             payment.paymentType = PaymentType.Card;
-            payment.cashBackAmount = cashBackAmount;
 
-            if (cashBackAmount > 0)
+
+
+            if (approvedAmount < transaction.balance)
             {
-                payment.IsCBrequested = true;
-                transaction.IsCBrequested = true;
-
+                payment.IsPartialPayment = true;
             }
-
+            else /*if (approvedAmount == transaction.balance)*/
+            {
+                if (transaction.IsCBrequested)
+                {
+                    transaction.cashBackOwed = payment.cashBackReqAmount;
+                }
+            }
             transaction.balance -= payment.ccAmount;
-            transaction.CCtotalRecieved += payment.ccAmount;
-            transaction.cashBackOwed = cashBackAmount;
+            transaction.totalCCreceived += payment.ccAmount;
+            
             transaction.paymentsList.Add(payment);
 
         }
-        static void ccDeclined(Transaction transaction, Payment payment, CardType type, decimal declinedAmount, decimal cashBackAmount)
+        static void ccDeclined(Transaction transaction, Payment payment, CardType type)
         {
             payment.success = false;
             payment.declined = true;
 
             payment.ccVendor = type;
-            payment.ccAmount = declinedAmount;
+            payment.declinedAmount = transaction.balance;
             payment.paymentType = PaymentType.Card;
-            payment.cashBackAmount = cashBackAmount;
 
-            if (cashBackAmount > 0)
-            {
-                payment.IsCBrequested = true;
-            }
         }
-        static void cashAccepted(Transaction transaction, Payment payment, decimal cashAmount)
+        //static void cashAccepted(Transaction transaction, Payment payment, decimal cashAmount)
+        //{
+        //    payment.cashAmount = cashAmount;
+        //    payment.success = true;
+        //    payment.paymentType = PaymentType.Cash;
+
+        //    transaction.paymentsList.Add(payment);
+        //}
+
+        static bool ChangeAndCashBack(Transaction transaction, CashDrawer drawer)
         {
-            payment.cashAmount = cashAmount;
-            payment.success = true;
-            payment.paymentType = PaymentType.Cash;
+            bool insuffChange = false;
+            bool changeGiven = false;
+            bool changeCounted = false;
+
+            if (transaction.changeOwed < 0)
+            {
+
+                decimal changeTotal = transaction.changeOwed;
+
+                changeTotal = Math.Abs(changeTotal);
+
+                int[] changeCounts = new int[13];
+                changeCounted = GetChangeCounts(changeCounts, changeTotal, drawer);
+
+                if (changeCounted)
+                {
+                    changeGiven = GiveChange(transaction, drawer, changeCounts, changeTotal);
+                }
+                else
+                {
+                    Console.WriteLine("Insufficient Change");
+                    insuffChange = true;
+                }
+                if (insuffChange)
+                {
+                    Console.WriteLine("Alternatives...");
+                }
+            }
+            if (changeCounted && changeGiven)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+
         }
     }
 }

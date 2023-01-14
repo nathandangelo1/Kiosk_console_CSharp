@@ -8,6 +8,23 @@
         public readonly decimal[] values = { hundredDec, fiftyDec, twentyDec, tenDec, fiveDec, twoDollarDec, dollarDec, dollarCoinDec, halfdollarDec, quarterDec, dimeDec, nickelDec, pennyDec };
         public readonly string[] valueNames = { "hundreds", "fifties", "twenties", "tens", "fives", "twos", "dollars", "dollarCoin", "halfdollar", "quarters", "dimes", "nickels", "pennies" };
 
+        public readonly Dictionary<string, decimal> NameValueDict = new()
+        {
+            {"hundreds",hundredDec},
+            {"fifties",fiftyDec},
+            {"twenties",twentyDec},
+            {"tens",tenDec},
+            {"fives", fiveDec},
+            {"twos",twoDollarDec},
+            {"dollars", dollarDec},
+            {"dollarCoin", dollarCoinDec},
+            {"halfdollar", halfdollarDec},
+            {"quarters", quarterDec},
+            {"dimes", dimeDec},
+            {"nickels", nickelDec},
+            {"pennies", pennyDec}
+        };
+
         public decimal[] cashInDrawer;
 
         private decimal _pennies, _nickels, _dimes, _quarters, _halfDollars, _dollarCoins, _dollars, _twoDollars, _fives, _tens, _twenties, _fifties, _hundreds;
@@ -232,6 +249,8 @@
             cashInDrawer[11] = _nickels;
             cashInDrawer[12] = _pennies;
 
+
+        
         }
 
         public decimal GetTotalCashInDrawer()
