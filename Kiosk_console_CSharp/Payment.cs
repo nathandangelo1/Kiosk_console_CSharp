@@ -10,7 +10,7 @@
         public PaymentType paymentType;
         public bool success;
 
-        public CardType? ccVendor;
+        public CreditCardFunctions.CreditCardType? ccVendor;
         public decimal ccAmount;
         public bool declined;
         public decimal declinedAmount;

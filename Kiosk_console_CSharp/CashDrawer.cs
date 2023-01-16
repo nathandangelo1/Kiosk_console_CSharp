@@ -1,8 +1,9 @@
 ﻿namespace Kiosk_Console_CSharp
 {
+
+    // CLASS CONTAINS PROPERTIES
 public class CashDrawer
     {
-
         public const decimal pennyDec = .01M, nickelDec = .05M, dimeDec = .10M, quarterDec = .25M, halfdollarDec = .50M, dollarCoinDec = 1.00M, dollarDec = 1.00M, twoDollarDec = 2.00M, fiveDec = 5.00M, tenDec = 10.00M, twentyDec = 20.00M, fiftyDec = 50.00M, hundredDec = 100.00M;
 
         public readonly decimal[] values = { hundredDec, fiftyDec, twentyDec, tenDec, fiveDec, twoDollarDec, dollarDec, dollarCoinDec, halfdollarDec, quarterDec, dimeDec, nickelDec, pennyDec };
@@ -10,12 +11,12 @@ public class CashDrawer
 
         public decimal[] cashInDrawer;
 
-        public decimal _pennies, _nickels, _dimes, _quarters, _halfDollars, _dollarCoins, _dollars, _twoDollars, _fives, _tens, _twenties, _fifties, _hundreds;
+        private decimal _pennies, _nickels, _dimes, _quarters, _halfDollars, _dollarCoins, _dollars, _twoDollars, _fives, _tens, _twenties, _fifties, _hundreds;
 
 
         //Properties
         #region
-        public decimal Pennies
+        private decimal Pennies
         {
             get
             {
@@ -30,7 +31,7 @@ public class CashDrawer
 
             }
         }
-        public decimal Nickels
+        private decimal Nickels
         {
             get
             {
@@ -44,7 +45,7 @@ public class CashDrawer
                 }
             }
         }
-        public decimal Dimes
+        private decimal Dimes
         {
             get
             {
@@ -58,7 +59,7 @@ public class CashDrawer
                 }
             }
         }
-        public decimal Quarters
+        private decimal Quarters
         {
             get
             {
@@ -72,7 +73,7 @@ public class CashDrawer
                 }
             }
         }
-        public decimal Halfdollars
+        private decimal Halfdollars
         {
             get
             {
@@ -86,7 +87,7 @@ public class CashDrawer
                 }
             }
         }
-        public decimal DollarCoins
+        private decimal DollarCoins
         {
             get
             {
@@ -100,7 +101,7 @@ public class CashDrawer
                 }
             }
         }
-        public decimal Dollars
+        private decimal Dollars
         {
             get
             {
@@ -114,7 +115,7 @@ public class CashDrawer
                 }
             }
         }
-        public decimal TwoDollars
+        private decimal TwoDollars
         {
             get
             {
@@ -128,7 +129,7 @@ public class CashDrawer
                 }
             }
         }
-        public decimal Fives
+        private decimal Fives
         {
             get
             {
@@ -142,7 +143,7 @@ public class CashDrawer
                 }
             }
         }
-        public decimal Tens
+        private decimal Tens
         {
             get
             {
@@ -156,7 +157,7 @@ public class CashDrawer
                 }
             }
         }
-        public decimal Twenties
+        private decimal Twenties
         {
             get
             {
@@ -170,7 +171,7 @@ public class CashDrawer
                 }
             }
         }
-        public decimal Fifties
+        private decimal Fifties
         {
             get
             {
@@ -184,7 +185,7 @@ public class CashDrawer
                 }
             }
         }
-        public decimal Hundreds
+        private decimal Hundreds
         {
             get
             {

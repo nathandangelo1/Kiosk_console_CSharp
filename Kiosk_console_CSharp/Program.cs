@@ -1,8 +1,6 @@
 ﻿
 using System.Globalization;
-using System.Runtime.CompilerServices;
 using System.Diagnostics;
-using System.Transactions;
 
 namespace Kiosk_Console_CSharp
 {
@@ -10,10 +8,10 @@ namespace Kiosk_Console_CSharp
     {
         Cash, Card
     }
-    public enum CardType
-    {
-        MasterCard, Visa, AmericanExpress, Discover, JCB
-    }
+    //public enum CardType
+    //{
+    //    MasterCard, Visa, AmericanExpress, Discover, JCB, UnknownCard
+   // }
 
     public class Program
     {
@@ -21,30 +19,27 @@ namespace Kiosk_Console_CSharp
         {
             CashDrawer drawer = new();
 
-            ProcessStartInfo startInfo = new ProcessStartInfo();
-            startInfo.FileName = @"C:\Users\natha\source\repos\Kiosk_Logging_CSharp\Kiosk_Logging_CSharp\bin\Debug\net6.0\Kiosk_Logging_CSharp.exe";
-            //startInfo.Arguments = "arguments separated by a space";
-            //Process.Start(startInfo);
-
             bool quit = false;
             do
             {
                 quit = false;
-
                 
-                Header("Welcom to ChangeBot v0.001", "By NHS Corp");
+                Header("Welcome to ChangeBot v0.01", "By NHS Corp");
                 Console.WriteLine("Press any key to begin transaction.");
-                Console.ReadKey(true);
-                //while (!int.TryParse(Console.Readkey(), out userSelection) || userSelection != 1) { }
+                string str = Console.ReadLine();
                 
-                TransactionFunction(drawer, startInfo);
+                TransactionFunction(drawer);
 
+                if(str == "exit")
+                {
+                    quit = true;
+                }
 
             } while (quit == false);
 
         }
 
-        static void TransactionLogging(ProcessStartInfo startInfo, Transaction transaction)
+        static void TransactionLogging(Transaction transaction)
         {
             string transNumber = "";
             string transDate = "";
@@ -53,9 +48,6 @@ namespace Kiosk_Console_CSharp
             string transCC = "";
             string transChange = "";
             
-            //string[] args = new string[6] {transNumber,transDate, transTime, transCash, transCC, transChange};
-
-
             transNumber = transaction.transactionNumber.ToString();
             transDate = transaction.transactionDateTime.ToString("d");
             transTime = transaction.transactionDateTime.ToString("T");
@@ -80,13 +72,15 @@ namespace Kiosk_Console_CSharp
                 }
             }
             string arg = transNumber + " " + transDate + " " + transTime + " " + transCash + " " + transChange + " " + transCC;
-            
+
+            ProcessStartInfo startInfo = new ProcessStartInfo();
+            startInfo.FileName = @"C:\Users\natha\source\repos\Kiosk_console_CSharp\Kiosk_Logging_CSharp\Kiosk_Logging_CSharp\bin\Debug\net6.0\Kiosk_Logging_CSharp.exe";
             startInfo.Arguments = arg;
             Process.Start(startInfo);
 
 
         }
-        static void TransactionFunction(CashDrawer drawer, ProcessStartInfo startInfo)
+        static void TransactionFunction(CashDrawer drawer)
         {
             decimal totalPayments;
             
@@ -135,7 +129,7 @@ namespace Kiosk_Console_CSharp
 
                 TransactionsList.Transactions.Add(transaction);
 
-                TransactionLogging(startInfo, transaction);
+                TransactionLogging(transaction);
             }
         }
 
@@ -184,8 +178,8 @@ namespace Kiosk_Console_CSharp
             bool parseSuccessfull;
             do
             {
-                //userSelection = 0;
-                //parseSuccessfull = false;
+                userSelection = 0;
+                parseSuccessfull = false;
                 
                 do
                 {
@@ -219,7 +213,7 @@ namespace Kiosk_Console_CSharp
         private static void GetCardPayment(Transaction transaction, CashDrawer drawer)
         {
             Payment payment = new(transaction.transactionNumber, PaymentType.Card);
-            CardType type;
+            CreditCardFunctions.CreditCardType type;
             string creditCardNumber;
             string creditCardNumber1 = "4716023102375986";  // Visa
             bool valid = false;
@@ -230,13 +224,13 @@ namespace Kiosk_Console_CSharp
 
             if (transaction.IsCBrequested == false)
             {
-                Header("ChangeBot", "\nBy NHS Corp");
+                Header("ChangeBot v00000001", "By NHS Corp");
 
                 Console.WriteLine("Cash Back?  y/n");
                 string input = Console.ReadLine();
                 if (input == "y")
                 {
-                    cashBackAmount = GetCashBackAmt(drawer, totalCash);
+                    cashBackAmount = GetCashBackAmt(/*drawer,*/ totalCash);
                     if (cashBackAmount > 0)
                     {
                         transaction.IsCBrequested = true;
@@ -248,7 +242,8 @@ namespace Kiosk_Console_CSharp
 
             do
             {
-                Console.Clear();
+                Header("ChangeBot v000000001", "By NHS Corp");
+
                 Console.WriteLine("Please enter card number. Use dash '-' or space ' ' between segments. Format: 0000-0000-0000-0000");
                 string? creditCardString = Console.ReadLine();
 
@@ -256,21 +251,14 @@ namespace Kiosk_Console_CSharp
 
                 valid = CreditCardFunctions.IsValid(creditCardNumber);
 
+                ProcessingAnimation();
+
                 if (valid)
                 {
                     type = CreditCardFunctions.FindType(creditCardNumber);
                     Console.WriteLine(type);
                     APIresponse = CreditCardFunctions.MoneyRequest(creditCardNumber, transaction.balance);
 
-                    (var left, var right) = Console.GetCursorPosition();
-                    Console.SetCursorPosition(left,right);
-                    WaitForKeyorSeconds(.2, "Payment Processing.");
-                    Console.SetCursorPosition(left,right);
-                    WaitForKeyorSeconds(.2, "Payment Processing..");
-                    Console.SetCursorPosition(left, right);
-                    WaitForKeyorSeconds(.2, "Payment Processing...");
-                    Console.SetCursorPosition(left, right);
-                    WaitForKeyorSeconds(.2, "Payment Processing....");
 
                     if (APIresponse[1] == "declined")
                     {
@@ -288,7 +276,7 @@ namespace Kiosk_Console_CSharp
                         {
                             if (approvedAmount == transaction.balance)
                             {
-                                Console.WriteLine("Transaction Approved");
+                                Console.WriteLine("Transaction Approved.");
                                 Console.WriteLine($"{type}: Approved amount: {approvedAmount.ToString("C", CultureInfo.CurrentCulture)}");
 
                                 CCaccepted(transaction, payment, type, approvedAmount);
@@ -325,16 +313,17 @@ namespace Kiosk_Console_CSharp
             //return payment;
         }
 
-        static int GetCashBackAmt(CashDrawer drawer, decimal totalCash)
+        static int GetCashBackAmt(/*CashDrawer drawer,*/ decimal totalCash)
         {
             bool parseSuccess;
             bool modSuccess = false;
 
             do
             {
-                Console.Clear();
+                Header("ChangeBot v00000001", "By NHS Corp");
+
                 Console.WriteLine("Please enter Cash Back amount in increments of 10. Or enter \"exit\" to return.");
-                Console.WriteLine("Example: 10 or 20 or 50 or 100");
+                Console.WriteLine("Example: 30.00");
                 string input = Console.ReadLine();
 
                 if (input == "exit")
@@ -348,6 +337,7 @@ namespace Kiosk_Console_CSharp
                     if (parseSuccess && amount % 10 == 0 && amount < totalCash)
                     {
                         modSuccess = true;
+                        WaitForKeyorSeconds(1);
                         return amount;
                     }
                     else if (amount > totalCash)
@@ -371,13 +361,13 @@ namespace Kiosk_Console_CSharp
             var exit = (0M, 0, true);
             bool earlyExit = false;
 
-            Header("ChangeBot v0.000015", "By NHS Corp");
+            Header("ChangeBot v0.0000000011111", "By NHS Corp");
 
             Console.WriteLine("\n");
             var CP1 = Console.GetCursorPosition();
             Console.WriteLine($"Amount Due: {transaction.balance}\n");
-            Console.WriteLine($"Input payment by individual bill or coin value. Format: ###.## ");
-            Console.WriteLine("Enter 'done' to return early\n");
+            Console.WriteLine($"Input payment by individual bill or coin value. Cash: $###.##  Coin:  $0.##");
+            Console.WriteLine("Enter 'x' to return early\n");
 
             do
             {
@@ -435,6 +425,7 @@ namespace Kiosk_Console_CSharp
                 parseSuccess = false;
                 valid = false;
                 splitString = Array.Empty<string>();
+                string stringValue = "";
 
                 Header("ChangeBot v0.0000015", "By NHS Corp");
 
@@ -442,11 +433,11 @@ namespace Kiosk_Console_CSharp
                 var CP = Console.GetCursorPosition();
                 Console.WriteLine($"Amount Due: {transaction.balance}\n");
                 Console.WriteLine($"Input payment by individual bill or coin value. Format: ###.## ");
-                Console.WriteLine("Enter 'done' to return early\n");
+                Console.WriteLine("Enter 'd' to return early\n");
 
                 var CP2= Console.GetCursorPosition();
                 Console.Write("$");
-                string? stringValue = Console.ReadLine();
+                stringValue = Console.ReadLine();
                 parseSuccess = decimal.TryParse(stringValue, out value);
 
                 if (parseSuccess && stringValue.Contains('.'))
@@ -464,6 +455,7 @@ namespace Kiosk_Console_CSharp
                         {
                             denomIndex = i;
                             valid = true;
+                            return (value, denomIndex, false);
                         }
                     }
                     if (valid == false)
@@ -471,7 +463,7 @@ namespace Kiosk_Console_CSharp
                         WriteOver(CP2, seconds:1);
                     }
                 }
-                else if (stringValue == "exit")
+                else if (stringValue == "d")
                 {
                     return (0M, 0, true);
                 }
@@ -494,14 +486,15 @@ namespace Kiosk_Console_CSharp
 
             do
             {
-                itemTuple = GetItems(itemCount);
+                Header("ChangeBot v0.00001", "By NHS Corp");
+                itemTuple = GetItems(itemCount, total);
                 itemCount++;
                 total += itemTuple.value;
 
             } while (itemTuple.escape != true);
             return total;
         }
-        static (decimal, bool) GetItems(int itemCount)
+        static (decimal, bool) GetItems(int itemCount, decimal total)
         {
             bool parseSuccess;
             bool valid;
@@ -515,8 +508,7 @@ namespace Kiosk_Console_CSharp
                 escape = false;
                 splitString = Array.Empty<string>();
 
-                Header("ChangeBot v0.00001", "By NHS Corp");
-
+                Console.WriteLine($"Balance: {total}");
                 var CP1 = Console.GetCursorPosition();
                 Console.WriteLine($"Input item {itemCount}. Format: ###.##  \nPress 'Enter' when finished.");
                 
@@ -545,7 +537,7 @@ namespace Kiosk_Console_CSharp
                 }
                 else if (string.IsNullOrWhiteSpace(stringValue))
                 {
-                    //splitString = Array.Empty<string>();
+                    splitString = Array.Empty<string>();
                     escape = true;
                 }
                 else
@@ -554,11 +546,9 @@ namespace Kiosk_Console_CSharp
                     Console.WriteLine("Formatting error. Try Again.");
                 }
 
-            } while (valid == false && escape != true);
+            } while (valid == false && escape == false);
   
             return (value, escape);
-            
-
         }
  
         static bool GetChangeCounts(int[] changeCounts, decimal changeAmount, CashDrawer drawer)
@@ -611,7 +601,7 @@ namespace Kiosk_Console_CSharp
             Console.WriteLine(text);
             Task.Factory.StartNew(() => Console.ReadKey()).Wait(TimeSpan.FromSeconds(seconds));
         }
-        static void CCaccepted(Transaction transaction, Payment payment, CardType type, decimal approvedAmount)
+        static void CCaccepted(Transaction transaction, Payment payment, CreditCardFunctions.CreditCardType type, decimal approvedAmount)
         {
             payment.success = true;
             payment.declined = false;
@@ -626,7 +616,7 @@ namespace Kiosk_Console_CSharp
             transaction.paymentsList.Add(payment);
 
         }
-        static void CCdeclined(Transaction transaction, Payment payment, CardType type, decimal declinedAmount)
+        static void CCdeclined(Transaction transaction, Payment payment, CreditCardFunctions.CreditCardType type, decimal declinedAmount)
         {
             payment.success = false;
             payment.declined = true;
@@ -693,6 +683,21 @@ namespace Kiosk_Console_CSharp
             }
             Console.WriteLine("    ╚════════════════════════════════════════════════════════════════════════════════════════╝");
             Console.WriteLine("\n");
+        }
+
+        static void ProcessingAnimation(string message="Payment processing.", double seconds=0.1)
+        {
+            var CP= Console.GetCursorPosition();
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < 10; j++)
+                {
+
+                    Console.SetCursorPosition(CP.Left, CP.Top);
+                    WaitForKeyorSeconds(seconds, message += ".");
+                }
+            }
+
         }
     }
 

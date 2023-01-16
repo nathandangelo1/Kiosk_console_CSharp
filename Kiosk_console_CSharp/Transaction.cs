@@ -31,9 +31,6 @@ public class Transaction
             balance = atotal;
 
         }
-
-
     }
-
 }
 
