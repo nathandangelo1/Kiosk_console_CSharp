@@ -1,16 +1,5 @@
 ﻿namespace Kiosk_Console_CSharp
 {
-    public class Drawer
-    {
-        public Dictionary<string, decimal> CashDrawerDict = new Dictionary<string, decimal>();
-
-
-        public Drawer(decimal apennyCount = 1.00M, decimal anickelCount = 4.00M, decimal adimeCount = 10.00M, decimal aquarterCount = 20.00M, decimal ahalfDollarCount = 0.00M, decimal adollarCoinCount = 0.00M, decimal adollarCount = 100.00M, decimal atwoDollarCount = 0.00M, decimal afiveCount = 100.00M, decimal atenCount = 250.00M, decimal atwentyCount = 500.00M, decimal afiftyCount = 0.00M, decimal ahundredCount = 500.00M)
-        {
-            CashDrawerDict.Add("hundreds", ahundredCount);
-            CashDrawerDict.Add("fifties", 2M);
-        }
-    }
 public class CashDrawer
     {
 
@@ -21,7 +10,7 @@ public class CashDrawer
 
         public decimal[] cashInDrawer;
 
-        private decimal _pennies, _nickels, _dimes, _quarters, _halfDollars, _dollarCoins, _dollars, _twoDollars, _fives, _tens, _twenties, _fifties, _hundreds;
+        public decimal _pennies, _nickels, _dimes, _quarters, _halfDollars, _dollarCoins, _dollars, _twoDollars, _fives, _tens, _twenties, _fifties, _hundreds;
 
 
         //Properties
@@ -211,37 +200,37 @@ public class CashDrawer
         }
         #endregion//
 
-        public CashDrawer(decimal apennyCount = 1.00M, decimal anickelCount = 4.00M, decimal adimeCount = 10.00M, decimal aquarterCount = 20.00M, decimal ahalfDollarCount = 0.00M, decimal adollarCoinCount = 0.00M, decimal adollarCount = 100.00M, decimal atwoDollarCount = 0.00M, decimal afiveCount = 100.00M, decimal atenCount = 250.00M, decimal atwentyCount = 500.00M, decimal afiftyCount = 0.00M, decimal ahundredCount = 500.00M)
+        public CashDrawer(decimal pennyTotal = 1.00M, decimal nickelTotal = 4.00M, decimal dimeTotal = 10.00M, decimal quarterTotal = 20.00M, decimal halfdollarTotal = 0.00M, decimal dollarCoinTotal = 0.00M, decimal dollarTotal = 100.00M, decimal twoDollarTotal = 0.00M, decimal fiveTotal = 100.00M, decimal tenTotal = 250.00M, decimal twentyTotal = 500.00M, decimal fiftyTotal = 0.00M, decimal hundredTotal = 500.00M)
         {
             cashInDrawer = new decimal[13];
 
-            Pennies = apennyCount;
-            Nickels = anickelCount;
-            Dimes = adimeCount;
-            Quarters = aquarterCount;
-            Halfdollars = ahalfDollarCount;
-            DollarCoins = adollarCoinCount;
-            Dollars = adollarCount;
-            TwoDollars = atwoDollarCount;
-            Fives = afiveCount;
-            Tens = atenCount;
-            Twenties = atwentyCount;
-            Fifties = afiftyCount;
-            Hundreds = ahundredCount;
+            Pennies = pennyTotal;
+            Nickels = nickelTotal;
+            Dimes = dimeTotal;
+            Quarters = quarterTotal;
+            Halfdollars = halfdollarTotal;
+            DollarCoins = dollarCoinTotal;
+            Dollars = dollarTotal;
+            TwoDollars = twoDollarTotal;
+            Fives = fiveTotal;
+            Tens = tenTotal;
+            Twenties = twentyTotal;
+            Fifties = fiftyTotal;
+            Hundreds = hundredTotal;
 
-            cashInDrawer[0] = _hundreds;
-            cashInDrawer[1] = _fifties;
-            cashInDrawer[2] = _twenties;
-            cashInDrawer[3] = _tens;
-            cashInDrawer[4] = _fives;
-            cashInDrawer[5] = _twoDollars;
-            cashInDrawer[6] = _dollars;
-            cashInDrawer[7] = _dollarCoins;
-            cashInDrawer[8] = _halfDollars;
-            cashInDrawer[9] = _quarters;
-            cashInDrawer[10] = _dimes;
-            cashInDrawer[11] = _nickels;
-            cashInDrawer[12] = _pennies;
+            cashInDrawer[0] = Hundreds;
+            cashInDrawer[1] = Fifties;
+            cashInDrawer[2] = Twenties;
+            cashInDrawer[3] = Tens;
+            cashInDrawer[4] = Fives;
+            cashInDrawer[5] = TwoDollars;
+            cashInDrawer[6] = Dollars;
+            cashInDrawer[7] = DollarCoins;
+            cashInDrawer[8] = Halfdollars;
+            cashInDrawer[9] = Quarters;
+            cashInDrawer[10] = Dimes;
+            cashInDrawer[11] = Nickels;
+            cashInDrawer[12] = Pennies;
 
 
 
