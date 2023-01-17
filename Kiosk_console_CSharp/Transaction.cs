@@ -29,7 +29,11 @@ public class Transaction
             transactionNumber = atransactionNumber;
             transactionDateTime = DateTime.Now;
             balance = atotal;
-
+        }
+        public void TransactionAdd(decimal atotal)
+        {
+            originalTotal += atotal;
+            balance += atotal;
         }
     }
 }

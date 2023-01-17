@@ -18,7 +18,7 @@ namespace Kiosk_Console_CSharp
             ConsoleKeyInfo key;
             do
             {
-                Header("Welcome to ChangeBot v0.01", "By NHS Corp");
+                Header("ChangeBot v0.01", "By NHS Corp");
                 Console.WriteLine("Press enter to begin transaction.");
 
                 key = Console.ReadKey();
@@ -187,27 +187,36 @@ namespace Kiosk_Console_CSharp
         }
         static void ManagePayments(Transaction transaction, CashDrawer drawer)
         {
+            string? selectionString;
             int userSelection;
             bool parseSuccessfull;
             do
             {
                 do
                 {
+                    selectionString = "";
                     userSelection = 0;
                     parseSuccessfull = false;
 
-                    Header("ChangeBot", "By NHS Corp");
+                    Header("ChangeBot v0.00001", "By NHS Corp");
 
                     Console.WriteLine("Balance Due: " + transaction.balance.ToString("C", CultureInfo.CurrentCulture));
 
                     if (transaction.IsCBrequested == false)
                     {
-                        Console.WriteLine("\nPress 1 to enter cash");
+                        Console.WriteLine("\nEnter 1 to pay with cash");
+                        Console.WriteLine("Enter 2 to pay with credit/debit");
+                        Console.WriteLine("Enter 3 to add additional items\n");
                     }
-                    Console.WriteLine("Press 2 to enter credit/debit\n");
+                    else
+                    {
+                        //Console.WriteLine("Enter 2 to pay with credit/debit");
+                        userSelection = 2;
+                    }
+                    selectionString = Console.ReadLine();
+                    parseSuccessfull = int.TryParse(selectionString, out userSelection);
 
-                    parseSuccessfull = int.TryParse(Console.ReadLine(), out userSelection);
-                } while (parseSuccessfull == false || !(userSelection == 1 || userSelection == 2));
+                } while (parseSuccessfull == false || !(userSelection == 1 || userSelection == 2 || userSelection == 3));
 
                 if (userSelection == 1)
                 {
@@ -217,7 +226,14 @@ namespace Kiosk_Console_CSharp
                 {
                     GetCardPayment(transaction, drawer);
                 }
-
+                else if (userSelection == 3)
+                {
+                    decimal total = ManageItems();
+                    if (total > 0)
+                    {
+                        transaction.TransactionAdd(total);
+                    }
+                }
             } while (transaction.balance > 0);
         }
 
@@ -229,17 +245,17 @@ namespace Kiosk_Console_CSharp
             string creditCardNumber1 = "4716023102375986";  // Visa
             bool valid;
             string[] APIresponse;
-            int cashBackAmount;
+            decimal cashBackAmount;
             string? input = "";
 
             decimal totalCash = drawer.GetTotalCashInDrawer();
 
             if (transaction.IsCBrequested == false)
             {
-                Header("ChangeBot v00000001", "By NHS Corp");
+                Header("ChangeBot v(-1000)", "By NHS Corp");
 
                 Console.WriteLine("Cash Back?  y/n");
-                input = Console.ReadLine() ?? "n";
+                input = Console.ReadLine();
                 if (input == "y")
                 {
                     cashBackAmount = GetCashBackAmt(totalCash);
@@ -322,7 +338,7 @@ namespace Kiosk_Console_CSharp
             //return payment;
         }
 
-        static int GetCashBackAmt(/*CashDrawer drawer,*/ decimal totalCash)
+        static decimal GetCashBackAmt(/*CashDrawer drawer,*/ decimal totalCash)
         {
             bool parseSuccess;
             bool modSuccess = false;
@@ -332,11 +348,11 @@ namespace Kiosk_Console_CSharp
                 Header("ChangeBot v00000001", "By NHS Corp");
 
                 Console.WriteLine("Please enter Cash Back amount in increments of 10. Or enter \"exit\" to return.");
-                Console.WriteLine("Examples: 20 or 80");
+                //Console.WriteLine("\nExamples: 10 or 30");
                 Console.Write("$");
                 var CP = Console.GetCursorPosition();
 
-                input = Console.ReadLine() ?? "";
+                input = Console.ReadLine();
 
                 if (input == "exit")
                 {
@@ -344,7 +360,7 @@ namespace Kiosk_Console_CSharp
                 }
                 else
                 {
-                    parseSuccess = int.TryParse(input, out int amount);
+                    parseSuccess = decimal.TryParse(input, out decimal amount);
 
                     if (parseSuccess && amount % 10 == 0 && amount < totalCash)
                     {
@@ -354,7 +370,8 @@ namespace Kiosk_Console_CSharp
                     }
                     else if (amount > totalCash)
                     {
-                        Console.WriteLine("Requested amount too large.");
+                        //Console.WriteLine("Requested amount too large.");
+                        WaitForKeyorSeconds(3, "Requested amount too large.");
                     }
                     else if (modSuccess == false)
                     {
@@ -368,7 +385,7 @@ namespace Kiosk_Console_CSharp
                 }
             } while (modSuccess == false);
 
-            return 0;
+            return 0M;
         }
 
         static void GetCashPayments(Transaction transaction, CashDrawer drawer)
@@ -443,55 +460,76 @@ namespace Kiosk_Console_CSharp
 
                 Console.WriteLine("\n");
                 var CP = Console.GetCursorPosition();
-                Console.WriteLine($"Amount Due: {transaction.balance}\n");
+                Console.WriteLine($"Amount Due: {transaction.balance.ToString("C", CultureInfo.CurrentCulture)}\n");
                 Console.WriteLine($"Input payment by individual bill or coin value. Cash: $###.##  Coin:  $0.##");
                 Console.WriteLine("(Example: 1.00 for dollar or 0.25 for quarter)");
 
-                Console.WriteLine("Enter 'x' to return early\n");
+                Console.WriteLine("\nEnter 'x' to return early\n");
 
                 var CP2 = Console.GetCursorPosition();
                 Console.Write("$");
                 stringValue = Console.ReadLine();
                 parseSuccess = decimal.TryParse(stringValue, out value);//ERROR VALUE removing period
 
-                if (!string.IsNullOrEmpty(stringValue))
+                if (!string.IsNullOrEmpty(stringValue) && parseSuccess)
                 {
-                    if (parseSuccess && stringValue.Contains('.'))
+                    for (int i = 0; i < drawer.values.Length; i++)
                     {
-                        splitString = stringValue.Split(".");
-                        if (splitString.Length != 2 || splitString[1].Length != 2)
+                        if (drawer.values[i] == value)
                         {
-                            valid = false;
-                            WriteOver(CP2, seconds: 1);
-                            continue;
-                        }
-                        for (int i = 0; i < drawer.values.Length; i++)
-                        {
-                            if (drawer.values[i] == value)
-                            {
-                                denomIndex = i;
-                                valid = true;
-                                return (value, denomIndex, false);
-                            }
-                        }
-                        if (valid == false)
-                        {
-                            WriteOver(CP2, seconds: 1);
+                            denomIndex = i;
+                            valid = true;
+                            Console.Beep();
+                            return (value, denomIndex, false);
                         }
                     }
-                    else if (stringValue == "x")
-                    {
-                        return (0M, 0, true);
-                    }
-                    else
-                    {
-                        valid = false;
-                        WriteOver(CP2, seconds: 1);
-                    }
+                    //valid = true;
+                    //    if (parseSuccess && stringValue.Contains('.'))
+                    //    {
+                    //        splitString = stringValue.Split(".");
+                    //        if (splitString.Length != 2 || splitString[1].Length != 2)
+                    //        {
+                    //            valid = false;
+                    //           // WriteOver(CP2, seconds: 1);
+                    //            continue;
+                    //        }
+                    //        for (int i = 0; i < drawer.values.Length; i++)
+                    //        {
+                    //            if (drawer.values[i] == value)
+                    //            {
+                    //                denomIndex = i;
+                    //                valid = true;
+                    //                return (value, denomIndex, false);
+                    //            }
+                    //        }
+                    //        if (valid == false)
+                    //        {
+                    //            //WriteOver(CP2, seconds: 1);
+                    //        }
+                    //    }
+                    //    else if (stringValue == "x")
+                    //    {
+                    //        return (0M, 0, true);
+                    //    }
+                    //    else
+                    //    {
+                    //        valid = false;
+                    //        //WriteOver(CP2, seconds: 1);
+                    //    }
+                }
+                else if ( stringValue == "x")
+                {
+                    return (0M, 0, true);
+                }
+                else
+                {
+                    valid = false;
+                    WriteOver(CP2, message:"Error. Try again.", seconds: 2);
                 }
             } while (valid == false) ;
             
-            return (value, denomIndex, false);
+            //return (value, denomIndex, false);
+            return(0M,0, false);
         }
 
         static decimal ManageItems()
@@ -503,6 +541,7 @@ namespace Kiosk_Console_CSharp
             do
             {
                 itemTuple = GetItems(itemCount, total);
+                
                 itemCount++;
                 total += itemTuple.value;
 
@@ -519,41 +558,46 @@ namespace Kiosk_Console_CSharp
             do
             {
                 parseSuccess = false;
-                valid = true;
+                valid = false;
                 escape = false;
                 splitString = Array.Empty<string>();
                 string? stringValue = "";
 
-                Header("ChangeBot v0.00001", "By NHS Corp");
+                Header("ChangeBot v0.0001", "By NHS Corp");
                 Console.WriteLine();
                 var CPbalance = Console.GetCursorPosition();
                 Console.WriteLine($"Balance: {total:C}");
                 Console.WriteLine($"Input item {itemCount}. Format: ###.##  \nPress 'Enter' when finished.");
 
-                Console.Write("$");
                 var CPcursor = Console.GetCursorPosition();
+                Console.Write("$");
 
-                stringValue = Console.ReadLine() ?? "0.00";
+                stringValue = Console.ReadLine();
                 parseSuccess = decimal.TryParse(stringValue, out value);
 
-
-                if (parseSuccess && stringValue.Contains('.'))
+                if (parseSuccess && value > 0)
                 {
-                    try
-                    {
-                        splitString = stringValue.Split(".");
-                    }
-                    catch
-                    {
-                        valid = false;
-                    }
-
-                    if (splitString.Length != 2 || splitString[1].Length != 2)
-                    {
-                        valid = false;
-                        WriteOver(CPcursor, "Formatting error. Try Again.");
-                    }
+                    valid = true;
+                    Console.Beep();
                 }
+                //if (parseSuccess && stringValue.Contains('.')) { 
+                //}
+                //{
+                //    try
+                //    {
+                //        splitString = stringValue.Split(".");
+                //    }
+                //    catch
+                //    {
+                //        valid = false;
+                //    }
+
+                //    if (splitString.Length != 2 || splitString[1].Length != 2)
+                //    {
+                //        valid = false;
+                //        WriteOver(CPcursor, "Formatting error. Try Again.");
+                //    }
+                //}
                 else if (string.IsNullOrWhiteSpace(stringValue))
                 {
                     escape = true;
