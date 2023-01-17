@@ -8,10 +8,6 @@ namespace Kiosk_Console_CSharp
     {
         Cash, Card
     }
-    //public enum CardType
-    //{
-    //    MasterCard, Visa, AmericanExpress, Discover, JCB, UnknownCard
-   // }
 
     public class Program
     {
@@ -19,24 +15,41 @@ namespace Kiosk_Console_CSharp
         {
             CashDrawer drawer = new();
 
-            bool quit = false;
+            ConsoleKeyInfo key;
             do
             {
-                quit = false;
-                
                 Header("Welcome to ChangeBot v0.01", "By NHS Corp");
-                Console.WriteLine("Press any key to begin transaction.");
-                string str = Console.ReadLine();
+                Console.WriteLine("Press enter to begin transaction.");
+
+                key = Console.ReadKey();
                 
                 TransactionFunction(drawer);
 
-                if(str == "exit")
+            } while (key.Key != ConsoleKey.Z);
+
+            if(key.Key == ConsoleKey.Z)
+            {
+                PrintTransactions();
+            }
+
+            Console.ReadLine();
+        }
+        static void PrintTransactions()
+        {
+            ConsoleColumnFormatter formatter = new ConsoleColumnFormatter(2, 30);
+            foreach (var transaction in TransactionsList.Transactions)
+            {
+                Console.WriteLine($"Transaction Number: {transaction.transactionNumber}");
+                Console.WriteLine($"DateTime: {transaction.transactionDateTime}");
+
+                foreach (Payment payment in transaction.paymentsList)
                 {
-                    quit = true;
+                    formatter.Write($"Total: {transaction.originalTotal}");
+                    formatter.Write($"Cash: {payment.cashAmount}");
+                    formatter.Write($"Vendor: {payment.ccVendor}");
+                    formatter.Write($"CC Total: {payment.ccAmount}");
                 }
-
-            } while (quit == false);
-
+            }
         }
 
         static void TransactionLogging(Transaction transaction)
@@ -44,10 +57,10 @@ namespace Kiosk_Console_CSharp
             string transNumber = "";
             string transDate = "";
             string transTime = "";
-            string transCash= "";
+            string transCash = "";
             string transCC = "";
             string transChange = "";
-            
+
             transNumber = transaction.transactionNumber.ToString();
             transDate = transaction.transactionDateTime.ToString("d");
             transTime = transaction.transactionDateTime.ToString("T");
@@ -60,7 +73,7 @@ namespace Kiosk_Console_CSharp
                 {
                     transCC += payment.ccVendor.ToString() + payment.ccAmount.ToString();
                 }
-                if(transaction.paymentsList.Count > 1) 
+                if (transaction.paymentsList.Count > 1)
                 {
                     if (payment.Equals(PaymentType.Card))
                     {
@@ -78,31 +91,31 @@ namespace Kiosk_Console_CSharp
             startInfo.Arguments = arg;
             Process.Start(startInfo);
 
-
         }
+
         static void TransactionFunction(CashDrawer drawer)
         {
             decimal totalPayments;
-            
+
             Header("Welcom to ChangeBot v0.0001", "By NHS Corp");
             decimal total = ManageItems();
 
             if (total > 0)
             {
-
                 Transaction transaction = new(total, Guid.NewGuid());
 
                 ManagePayments(transaction, drawer);
-      
+
                 totalPayments = GetPaymentsTotal(transaction.paymentsList);
 
                 if (totalPayments >= transaction.originalTotal + transaction.cashBackReqAmount)
                 {
-                    if (transaction.IsCBrequested) {
+                    if (transaction.IsCBrequested)
+                    {
                         transaction.cashBackOwed -= transaction.cashBackReqAmount;
                         transaction.changeOwed -= transaction.cashBackReqAmount;
                     }
-                    else 
+                    else
                     {
                         transaction.changeOwed -= totalPayments - transaction.originalTotal;
                         transaction.balance += Math.Abs(transaction.changeOwed);
@@ -115,16 +128,16 @@ namespace Kiosk_Console_CSharp
 
                     if (changeAndCashBackSuccess)
                     {
-                        WaitForKeyorSeconds(6, "Transaction Completed. Thank you.");
+                        WaitForKeyorSeconds(6, "\nTransaction Completed.");
                     }
                     else
                     {
-                        Console.WriteLine("Dispensing Error: TransactionFunction");
+                        Console.WriteLine("\nDispensing Error: TransactionFunction");
                     }
                 }
                 else
                 {
-                    WaitForKeyorSeconds(3, "Transaction Completed. Thank you.");
+                    WaitForKeyorSeconds(3, "\nTransaction Completed.");
                 }
 
                 TransactionsList.Transactions.Add(transaction);
@@ -142,7 +155,7 @@ namespace Kiosk_Console_CSharp
                     decimal dispensedAmount = changeCounts[i] * drawer.values[i];
 
                     drawer.cashInDrawer[i] -= dispensedAmount;
-                    
+
                     if (transaction.IsCBrequested)
                     {
                         transaction.cashBackOwed += dispensedAmount;
@@ -155,13 +168,14 @@ namespace Kiosk_Console_CSharp
                         transaction.changeDispensed += dispensedAmount;
                     }
 
+                    var CP = Console.GetCursorPosition();
                     for (int j = 0; j < changeCounts[i]; j++)
                     {
-                        Console.WriteLine($"{drawer.values[i]} dispensed");
+                        WaitForKeyorSeconds(.5, $"{drawer.values[i]} dispensed");
                     }
                 }
             }
-            WaitForKeyorSeconds(text: "Don't forget to take your change.");
+            WaitForKeyorSeconds(text: "\nDon't forget to take your change.");
             if (transaction.balance == 0 && transaction.changeOwed == 0 && transaction.cashBackOwed == 0)
             {
                 return true;
@@ -173,16 +187,15 @@ namespace Kiosk_Console_CSharp
         }
         static void ManagePayments(Transaction transaction, CashDrawer drawer)
         {
-            Payment payment;
             int userSelection;
             bool parseSuccessfull;
             do
             {
-                userSelection = 0;
-                parseSuccessfull = false;
-                
                 do
                 {
+                    userSelection = 0;
+                    parseSuccessfull = false;
+
                     Header("ChangeBot", "By NHS Corp");
 
                     Console.WriteLine("Balance Due: " + transaction.balance.ToString("C", CultureInfo.CurrentCulture));
@@ -192,7 +205,6 @@ namespace Kiosk_Console_CSharp
                         Console.WriteLine("\nPress 1 to enter cash");
                     }
                     Console.WriteLine("Press 2 to enter credit/debit\n");
-                    //while (!int.TryParse(Console.ReadLine(), out userSelection) || userSelection != 1) { }
 
                     parseSuccessfull = int.TryParse(Console.ReadLine(), out userSelection);
                 } while (parseSuccessfull == false || !(userSelection == 1 || userSelection == 2));
@@ -204,10 +216,9 @@ namespace Kiosk_Console_CSharp
                 else if (userSelection == 2)
                 {
                     GetCardPayment(transaction, drawer);
-
                 }
 
-            } while ( transaction.balance > 0 );
+            } while (transaction.balance > 0);
         }
 
         private static void GetCardPayment(Transaction transaction, CashDrawer drawer)
@@ -216,10 +227,11 @@ namespace Kiosk_Console_CSharp
             CreditCardFunctions.CreditCardType type;
             string creditCardNumber;
             string creditCardNumber1 = "4716023102375986";  // Visa
-            bool valid = false;
+            bool valid;
             string[] APIresponse;
-            int cashBackAmount = 0;
-            decimal totalAmountDue;
+            int cashBackAmount;
+            string? input = "";
+
             decimal totalCash = drawer.GetTotalCashInDrawer();
 
             if (transaction.IsCBrequested == false)
@@ -227,10 +239,11 @@ namespace Kiosk_Console_CSharp
                 Header("ChangeBot v00000001", "By NHS Corp");
 
                 Console.WriteLine("Cash Back?  y/n");
-                string input = Console.ReadLine();
+                input = Console.ReadLine() ?? "n";
                 if (input == "y")
                 {
-                    cashBackAmount = GetCashBackAmt(/*drawer,*/ totalCash);
+                    cashBackAmount = GetCashBackAmt(totalCash);
+
                     if (cashBackAmount > 0)
                     {
                         transaction.IsCBrequested = true;
@@ -245,6 +258,7 @@ namespace Kiosk_Console_CSharp
                 Header("ChangeBot v000000001", "By NHS Corp");
 
                 Console.WriteLine("Please enter card number. Use dash '-' or space ' ' between segments. Format: 0000-0000-0000-0000");
+                
                 string? creditCardString = Console.ReadLine();
 
                 creditCardNumber = string.IsNullOrWhiteSpace(creditCardString) ? creditCardNumber1 : creditCardString;
@@ -258,7 +272,6 @@ namespace Kiosk_Console_CSharp
                     type = CreditCardFunctions.FindType(creditCardNumber);
                     Console.WriteLine(type);
                     APIresponse = CreditCardFunctions.MoneyRequest(creditCardNumber, transaction.balance);
-
 
                     if (APIresponse[1] == "declined")
                     {
@@ -281,24 +294,20 @@ namespace Kiosk_Console_CSharp
 
                                 CCaccepted(transaction, payment, type, approvedAmount);
                                 WaitForKeyorSeconds(4);
-                                //return payment;
                             }
 
-                            else if ( approvedAmount < transaction.balance )
+                            else if (approvedAmount < transaction.balance)
                             {
                                 Console.WriteLine("Transaction Partially Approved:");
                                 Console.WriteLine($"{type}: Approved amount: {approvedAmount.ToString("C", CultureInfo.CurrentCulture)}");
                                 payment.IsPartialPayment = true;
                                 CCaccepted(transaction, payment, type, approvedAmount);
                                 WaitForKeyorSeconds(4);
-                                //return payment;
-
                             }
                             else
                             {
                                 Console.WriteLine("Error- GetCardPayment");
                                 WaitForKeyorSeconds(10);
-                               // return payment;
                             }
                         }
                     }
@@ -317,14 +326,17 @@ namespace Kiosk_Console_CSharp
         {
             bool parseSuccess;
             bool modSuccess = false;
-
+            string input = "";
             do
             {
                 Header("ChangeBot v00000001", "By NHS Corp");
 
                 Console.WriteLine("Please enter Cash Back amount in increments of 10. Or enter \"exit\" to return.");
-                Console.WriteLine("Example: 30.00");
-                string input = Console.ReadLine();
+                Console.WriteLine("Examples: 20 or 80");
+                Console.Write("$");
+                var CP = Console.GetCursorPosition();
+
+                input = Console.ReadLine() ?? "";
 
                 if (input == "exit")
                 {
@@ -344,36 +356,37 @@ namespace Kiosk_Console_CSharp
                     {
                         Console.WriteLine("Requested amount too large.");
                     }
+                    else if (modSuccess == false)
+                    {
+                        WriteOver(CP);
+                    }
                     else
                     {
                         Console.WriteLine("CashBack Error.");
                     }
+                
                 }
             } while (modSuccess == false);
 
             return 0;
         }
 
-        static /*Payment*/ void GetCashPayments(Transaction transaction, CashDrawer drawer)
+        static void GetCashPayments(Transaction transaction, CashDrawer drawer)
         {
             Payment payment = new Payment(transaction.transactionNumber, PaymentType.Cash);
-            
+
             var exit = (0M, 0, true);
-            bool earlyExit = false;
+            bool earlyExit;
 
-            Header("ChangeBot v0.0000000011111", "By NHS Corp");
-
-            Console.WriteLine("\n");
             var CP1 = Console.GetCursorPosition();
-            Console.WriteLine($"Amount Due: {transaction.balance}\n");
-            Console.WriteLine($"Input payment by individual bill or coin value. Cash: $###.##  Coin:  $0.##");
-            Console.WriteLine("Enter 'x' to return early\n");
 
             do
             {
+                earlyExit = false;
                 (decimal value, int index, bool earlyOut) cashIn = ValidateCash(drawer, transaction);
                 if (cashIn == exit)
                 {
+                    payment.IsPartialPayment = true;
                     earlyExit = true;
                 }
                 else
@@ -382,30 +395,30 @@ namespace Kiosk_Console_CSharp
                     payment.cashAmount += cashIn.value;
                     transaction.balance -= cashIn.value;
                     transaction.totalCashReceived += cashIn.value;
-                    payment.success = true;
 
                     if (transaction.balance > 0)
                     {
                         var CP2 = Console.GetCursorPosition();
-                        Console.SetCursorPosition(CP1.Left,CP1.Top);
+                        Console.SetCursorPosition(CP1.Left, CP1.Top);
                         Console.WriteLine($"Amount Remaining: {transaction.balance.ToString("C", CultureInfo.CurrentCulture)}                  ");
-                        Console.SetCursorPosition(CP2.Left,CP2.Top);
-                    } else if (transaction.balance == 0)
+                        Console.SetCursorPosition(CP2.Left, CP2.Top);
+                    }
+                    else if (transaction.balance == 0)
                     {
-                        WaitForKeyorSeconds(3, text: "Thank You! Come Again.");
+                        WaitForKeyorSeconds(3, text: "Thank You!");
                     }
                 }
             } while (transaction.balance > 0 && earlyExit != true);
+            
+            payment.success = true;
 
             transaction.paymentsList.Add(payment);
-
-
-            //return payment;
+        
         }
 
         // Given the cursor position of the erroneous line(to write over it), prints error and waits 'seconds'
         // Remeber to 'get' cursor position earlier
-        static void WriteOver((int left, int top) cursorPosition, string message= "Error - Try Again", float seconds=1)
+        static void WriteOver((int left, int top) cursorPosition, string message = "Error - Try Again", float seconds = 1)
         {
             Console.SetCursorPosition(cursorPosition.left, cursorPosition.top);
             WaitForKeyorSeconds(seconds, message);
@@ -416,7 +429,6 @@ namespace Kiosk_Console_CSharp
         {
             bool parseSuccess;
             bool valid;
-            string[] splitString;
             decimal value;
             int denomIndex = 9999;
 
@@ -424,57 +436,61 @@ namespace Kiosk_Console_CSharp
             {
                 parseSuccess = false;
                 valid = false;
-                splitString = Array.Empty<string>();
-                string stringValue = "";
+                string[]? splitString = Array.Empty<string>();
+                string? stringValue;
 
                 Header("ChangeBot v0.0000015", "By NHS Corp");
 
                 Console.WriteLine("\n");
                 var CP = Console.GetCursorPosition();
                 Console.WriteLine($"Amount Due: {transaction.balance}\n");
-                Console.WriteLine($"Input payment by individual bill or coin value. Format: ###.## ");
-                Console.WriteLine("Enter 'd' to return early\n");
+                Console.WriteLine($"Input payment by individual bill or coin value. Cash: $###.##  Coin:  $0.##");
+                Console.WriteLine("(Example: 1.00 for dollar or 0.25 for quarter)");
 
-                var CP2= Console.GetCursorPosition();
+                Console.WriteLine("Enter 'x' to return early\n");
+
+                var CP2 = Console.GetCursorPosition();
                 Console.Write("$");
                 stringValue = Console.ReadLine();
-                parseSuccess = decimal.TryParse(stringValue, out value);
+                parseSuccess = decimal.TryParse(stringValue, out value);//ERROR VALUE removing period
 
-                if (parseSuccess && stringValue.Contains('.'))
+                if (!string.IsNullOrEmpty(stringValue))
                 {
-                    splitString = stringValue.Split(".");
-                    if (splitString.Length != 2 || splitString[1].Length != 2)
+                    if (parseSuccess && stringValue.Contains('.'))
                     {
-                        valid = false;
-                        WriteOver(CP2, seconds:1);
-                        continue;
-                    }
-                    for (int i = 0; i < drawer.values.Length; i++)
-                    {
-                        if (drawer.values[i] == value)
+                        splitString = stringValue.Split(".");
+                        if (splitString.Length != 2 || splitString[1].Length != 2)
                         {
-                            denomIndex = i;
-                            valid = true;
-                            return (value, denomIndex, false);
+                            valid = false;
+                            WriteOver(CP2, seconds: 1);
+                            continue;
+                        }
+                        for (int i = 0; i < drawer.values.Length; i++)
+                        {
+                            if (drawer.values[i] == value)
+                            {
+                                denomIndex = i;
+                                valid = true;
+                                return (value, denomIndex, false);
+                            }
+                        }
+                        if (valid == false)
+                        {
+                            WriteOver(CP2, seconds: 1);
                         }
                     }
-                    if (valid == false)
+                    else if (stringValue == "x")
                     {
-                        WriteOver(CP2, seconds:1);
+                        return (0M, 0, true);
+                    }
+                    else
+                    {
+                        valid = false;
+                        WriteOver(CP2, seconds: 1);
                     }
                 }
-                else if (stringValue == "d")
-                {
-                    return (0M, 0, true);
-                }
-                else
-                {
-                    valid = false;
-                    WriteOver(CP2, seconds:1);
-                }
-
-            } while (valid == false);
-
+            } while (valid == false) ;
+            
             return (value, denomIndex, false);
         }
 
@@ -486,7 +502,6 @@ namespace Kiosk_Console_CSharp
 
             do
             {
-                Header("ChangeBot v0.00001", "By NHS Corp");
                 itemTuple = GetItems(itemCount, total);
                 itemCount++;
                 total += itemTuple.value;
@@ -507,16 +522,20 @@ namespace Kiosk_Console_CSharp
                 valid = true;
                 escape = false;
                 splitString = Array.Empty<string>();
+                string? stringValue = "";
 
-                Console.WriteLine($"Balance: {total}");
-                var CP1 = Console.GetCursorPosition();
+                Header("ChangeBot v0.00001", "By NHS Corp");
+                Console.WriteLine();
+                var CPbalance = Console.GetCursorPosition();
+                Console.WriteLine($"Balance: {total:C}");
                 Console.WriteLine($"Input item {itemCount}. Format: ###.##  \nPress 'Enter' when finished.");
-                
-                //var CP2 = Console.GetCursorPosition();
-                Console.Write("\n$");
 
-                string? stringValue = Console.ReadLine();
+                Console.Write("$");
+                var CPcursor = Console.GetCursorPosition();
+
+                stringValue = Console.ReadLine() ?? "0.00";
                 parseSuccess = decimal.TryParse(stringValue, out value);
+
 
                 if (parseSuccess && stringValue.Contains('.'))
                 {
@@ -524,7 +543,7 @@ namespace Kiosk_Console_CSharp
                     {
                         splitString = stringValue.Split(".");
                     }
-                    catch 
+                    catch
                     {
                         valid = false;
                     }
@@ -532,25 +551,62 @@ namespace Kiosk_Console_CSharp
                     if (splitString.Length != 2 || splitString[1].Length != 2)
                     {
                         valid = false;
-                        Console.WriteLine("Formatting error. Try Again.");
+                        WriteOver(CPcursor, "Formatting error. Try Again.");
                     }
                 }
                 else if (string.IsNullOrWhiteSpace(stringValue))
                 {
-                    splitString = Array.Empty<string>();
                     escape = true;
                 }
                 else
                 {
                     valid = false;
-                    Console.WriteLine("Formatting error. Try Again.");
+                    WriteOver(CPcursor, "Formatting error. Try Again.");
                 }
 
             } while (valid == false && escape == false);
-  
+
             return (value, escape);
         }
- 
+        static bool ChangeAndCashBack(Transaction transaction, CashDrawer drawer)
+        {
+            bool insuffChange = false;
+            bool changeGiven = false;
+            bool changeCounted = false;
+
+            if (transaction.changeOwed < 0)
+            {
+                decimal changeTotal = transaction.changeOwed;
+
+                changeTotal = Math.Abs(changeTotal);
+
+                int[] changeCounts = new int[13];
+                changeCounted = GetChangeCounts(changeCounts, changeTotal, drawer);
+
+                if (changeCounted)
+                {
+                    changeGiven = GiveChange(transaction, drawer, changeCounts);
+                }
+                else
+                {
+                    Console.WriteLine("Insufficient Change");
+                    insuffChange = true;
+                }
+                if (insuffChange)
+                {
+                    Console.WriteLine("Alternatives...");
+                }
+            }
+            if (changeCounted && changeGiven)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+
+        }
         static bool GetChangeCounts(int[] changeCounts, decimal changeAmount, CashDrawer drawer)
         {
             int temp;
@@ -596,7 +652,7 @@ namespace Kiosk_Console_CSharp
             //Console.WriteLine(bank);
             return total;
         }
-        static void WaitForKeyorSeconds(double seconds = 5.0, string text ="")
+        static void WaitForKeyorSeconds(double seconds = 5.0, string text = "")
         {
             Console.WriteLine(text);
             Task.Factory.StartNew(() => Console.ReadKey()).Wait(TimeSpan.FromSeconds(seconds));
@@ -624,52 +680,11 @@ namespace Kiosk_Console_CSharp
             payment.ccVendor = type;
             payment.declinedAmount = declinedAmount;
             payment.paymentType = PaymentType.Card;
-            
-           // transaction.paymentsList.Add(payment);
-
         }
 
-        static bool ChangeAndCashBack(Transaction transaction, CashDrawer drawer)
+
+        public static void Header(string title, string subtitle = "")
         {
-            bool insuffChange = false;
-            bool changeGiven = false;
-            bool changeCounted = false;
-
-            if (transaction.changeOwed < 0)
-            {
-
-                decimal changeTotal = transaction.changeOwed;
-
-                changeTotal = Math.Abs(changeTotal);
-
-                int[] changeCounts = new int[13];
-                changeCounted = GetChangeCounts(changeCounts, changeTotal, drawer);
-
-                if (changeCounted)
-                {
-                    changeGiven = GiveChange(transaction, drawer, changeCounts);
-                }
-                else
-                {
-                    Console.WriteLine("Insufficient Change");
-                    insuffChange = true;
-                }
-                if (insuffChange)
-                {
-                    Console.WriteLine("Alternatives...");
-                }
-            }
-            if (changeCounted && changeGiven)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-
-        }
-        public static void Header(string title, string subtitle = "") {
             Console.Clear();
             Console.WriteLine();
             int windowWidth = 90 - 2;
@@ -678,16 +693,17 @@ namespace Kiosk_Console_CSharp
 
             Console.WriteLine("    ╔════════════════════════════════════════════════════════════════════════════════════════╗");
             Console.WriteLine(titleContent);
-            if (!string.IsNullOrEmpty(subtitle)) {
+            if (!string.IsNullOrEmpty(subtitle))
+            {
                 Console.WriteLine(subtitleContent);
             }
             Console.WriteLine("    ╚════════════════════════════════════════════════════════════════════════════════════════╝");
             Console.WriteLine("\n");
         }
 
-        static void ProcessingAnimation(string message="Payment processing.", double seconds=0.1)
+        static void ProcessingAnimation(string message = "Payment processing.", double seconds = 0.1)
         {
-            var CP= Console.GetCursorPosition();
+            var CP = Console.GetCursorPosition();
             for (int i = 0; i < 3; i++)
             {
                 for (int j = 0; j < 10; j++)
@@ -700,6 +716,35 @@ namespace Kiosk_Console_CSharp
 
         }
     }
-
+    class ConsoleColumnFormatter
+    {
+        private int _columnWidth = 20;
+        private int _numColumns = 4;
+    
+        private int _currentColumn = 0;
+    
+        public ConsoleColumnFormatter(int numColumns, int columnWidth)
+        {
+            _numColumns = numColumns;
+            _columnWidth = columnWidth;
+        }
+    
+        public void Write(string str)
+        {
+            Console.Write(str.PadRight(_columnWidth - str.Length, ' '));
+            _currentColumn++;
+    
+            checkForNewLine();
+        }
+    
+        private void checkForNewLine()
+        {
+            if (_currentColumn >= _numColumns)
+            {
+                Console.Write("\n");
+                _currentColumn = 0;
+            }
+        }
+    }
 }
 
