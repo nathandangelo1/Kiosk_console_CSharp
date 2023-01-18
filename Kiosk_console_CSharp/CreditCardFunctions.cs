@@ -3,122 +3,82 @@ using System;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
-namespace Kiosk_Console_CSharp
+namespace Kiosk_Console_CSharp;
+public class CreditCardFunctions
 {
-    public class CreditCardFunctions
-    {
-        // CLASS CODE PROVIDED- NOT WRITTEN
+    // CLASS CODE PROVIDED- NOT WRITTEN
 
-        public static string[] MoneyRequest(string account_number, decimal amount)
+    public static string[] MoneyRequest(string account_number, decimal amount)
+    {
+        Random rnd = new Random();
+        //50% CHANCE TRANSACTION PASSES OR FAILS
+        bool pass = rnd.Next(100) < 50;
+        //50% CHANCE THAT A FAILED TRANSACTION IS DECLINED
+        bool declined = rnd.Next(100) < 50;
+        if (pass)
         {
-            Random rnd = new Random();
-            //50% CHANCE TRANSACTION PASSES OR FAILS
-            bool pass = rnd.Next(100) < 50;
-            //50% CHANCE THAT A FAILED TRANSACTION IS DECLINED
-            bool declined = rnd.Next(100) < 50;
-            if (pass)
+            return new string[] { account_number, amount.ToString() };
+        }
+        else
+        {
+            if (!declined)
             {
-                return new string[] { account_number, amount.ToString() };
+                return new string[] { account_number, (amount / rnd.Next(2, 6)).ToString() };
             }
             else
             {
-                if (!declined)
-                {
-                    return new string[] { account_number, (amount / rnd.Next(2, 6)).ToString() };
-                }
-                else
-                {
-                    return new string[] { account_number, "declined" };
-                }//end if
+                return new string[] { account_number, "declined" };
             }//end if
         }//end if
+    }//end if
 
-        // LUHN ALGORITHM TO CHECK CC NUMBER
-        public static bool IsValid(object value)
+    // LUHN ALGORITHM TO CHECK CC NUMBER
+    public static bool IsValid(object value)
+    {
+        if (value == null)
         {
-            if (value == null)
-            {
-                return true;
-            }
+            return true;
+        }
 
-            string? ccValue = value as string;
+        string? ccValue = value as string;
 
-            if (ccValue == null)
+        if (ccValue == null)
+        {
+            return false;
+        }
+
+        ccValue = ccValue.Replace("-", "");
+        ccValue = ccValue.Replace(" ", "");
+
+        int checksum = 0;
+        bool evenDigit = false;
+
+        foreach (char digit in ccValue.Reverse())
+        {
+            if (digit < '0' || digit > '9')
             {
                 return false;
             }
 
-            ccValue = ccValue.Replace("-", "");
-            ccValue = ccValue.Replace(" ", "");
+            int digitValue = (digit - '0') * (evenDigit ? 2 : 1);
+            evenDigit = !evenDigit;
 
-            int checksum = 0;
-            bool evenDigit = false;
-
-            foreach (char digit in ccValue.Reverse())
+            while (digitValue > 0)
             {
-                if (digit < '0' || digit > '9')
-                {
-                    return false;
-                }
-
-                int digitValue = (digit - '0') * (evenDigit ? 2 : 1);
-                evenDigit = !evenDigit;
-
-                while (digitValue > 0)
-                {
-                    checksum += digitValue % 10;
-                    digitValue /= 10;
-                }
+                checksum += digitValue % 10;
+                digitValue /= 10;
             }
-
-            return checksum % 10 == 0;
         }
 
-        // REGEX EXPRESSIONS TO MATCH CC TYPE
-        //public enum CardType
-        //{
-        //    MasterCard, Visa, AmericanExpress, Discover, JCB
-        //};
+        return checksum % 10 == 0;
+    }
 
-        //public static CardType FindType(string cardNumber)
-        //{
-        //    //https://www.regular-expressions.info/creditcard.html
-        //    if (Regex.Match(cardNumber, @"^4[0-9]{12}(?:[0-9]{3})?$").Success)
-        //    {
-        //        return CardType.Visa;
-        //    }
+    // REGEX EXPRESSIONS TO MATCH CC TYPE
 
-        //    if (Regex.Match(cardNumber, @"^(?:5[1-5][0-9]{2}|222[1-9]|22[3-9][0-9]|2[3-6][0-9]{2}|27[01][0-9]|2720)[0-9]{12}$").Success)
-        //    {
-        //        return CardType.MasterCard;
-        //    }
-
-        //    if (Regex.Match(cardNumber, @"^3[47][0-9]{13}$").Success)
-        //    {
-        //        return CardType.AmericanExpress;
-        //    }
-
-        //    if (Regex.Match(cardNumber, @"^6(?:011|5[0-9]{2})[0-9]{12}$").Success)
-        //    {
-        //        return CardType.Discover;
-        //    }
-
-        //    if (Regex.Match(cardNumber, @"^(?:2131|1800|35\d{3})\d{11}$").Success)
-        //    {
-        //        return CardType.JCB;
-        //    }
-
-        //    throw new Exception("Unknown card.");
-        //}
-
-
-
-    //public string cardNumber { get; set; }
-
-        /// <summary>
-        /// getCardType()
-        /// </summary>
-        /// <returns>Matches a object reference to regex to bring back a card type, the validity of the card, or a default (Unknown)</returns>
+    /// <summary>
+    /// getCardType()
+    /// </summary>
+    /// <returns>Matches a object reference to regex to bring back a card type, the validity of the card, or a default (Unknown)</returns>
     public static CreditCardType FindType(string cardNumber)
     {
         Regex regAmex = new Regex("^3[47][0-9]{13}$");
@@ -174,39 +134,37 @@ namespace Kiosk_Console_CSharp
             return CreditCardType.Invalid;
     }
 
-        /// <summary>
-        /// isCreditCardAccepted()
-        /// </summary>
-        /// <returns>Checks to see if the credit card is allowed by comparing it to the integer value of CreditCardType to a local array of allowed integers</returns>
-        //public bool isCreditCardAccepted()
-        //{
-        //    // This should honestly be internalized somewhere for security reasons
-        //    int[] allowed = new int[] { 0, 1, 2, 3 };
-        //    return Array.IndexOf(allowed, FindType()) >= 0;
-        //}
+    /// <summary>
+    /// isCreditCardAccepted()
+    /// </summary>
+    /// <returns>Checks to see if the credit card is allowed by comparing it to the integer value of CreditCardType to a local array of allowed integers</returns>
+    //public bool isCreditCardAccepted()
+    //{
+    //    // This should honestly be internalized somewhere for security reasons
+    //    int[] allowed = new int[] { 0, 1, 2, 3 };
+    //    return Array.IndexOf(allowed, FindType()) >= 0;
+    //}
 
-        public enum CreditCardType
-        {
-            AmericanExpress,
-            BCGlobal,
-            CarteBlanche,
-            DinersClub,
-            Discover,
-            InstaPayment,
-            JCB,
-            KoreanLocal,
-            Laser,
-            Maestro,
-            Mastercard,
-            Solo,
-            Switch,
-            UnionPay,
-            Visa,
-            VisaMasterCard,
-
-
-            Invalid
-        }
+    public enum CreditCardType
+    {
+        AmericanExpress,
+        BCGlobal,
+        CarteBlanche,
+        DinersClub,
+        Discover,
+        InstaPayment,
+        JCB,
+        KoreanLocal,
+        Laser,
+        Maestro,
+        Mastercard,
+        Solo,
+        Switch,
+        UnionPay,
+        Visa,
+        VisaMasterCard,
+        Invalid
     }
 }
-        
+
+

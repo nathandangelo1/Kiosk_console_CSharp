@@ -1,9 +1,25 @@
-﻿namespace Kiosk_Console_CSharp
-{
+﻿namespace Kiosk_Console_CSharp;
     static class TransactionsList
     {
         public static List<Transaction> Transactions = new List<Transaction>();
+    public static void PrintTransactions()
+    {
+        ConsoleColumnFormatter formatter = new ConsoleColumnFormatter(2, 30);
+        foreach (var transaction in TransactionsList.Transactions)
+        {
+            Console.WriteLine($"Transaction Number: {transaction.transactionNumber}");
+            Console.WriteLine($"DateTime: {transaction.transactionDateTime}");
+
+            foreach (Payment payment in transaction.paymentsList)
+            {
+                formatter.Write($"Total: {transaction.originalTotal}");
+                formatter.Write($"Cash: {payment.cashAmount}");
+                formatter.Write($"Vendor: {payment.ccVendor}");
+                formatter.Write($"CC Total: {payment.ccAmount}");
+            }
+        }
     }
+}
 
 public class Transaction
     {
@@ -35,6 +51,6 @@ public class Transaction
             originalTotal += atotal;
             balance += atotal;
         }
-    }
+    
 }
 
