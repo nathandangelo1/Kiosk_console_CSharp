@@ -33,7 +33,7 @@ public class CreditCardFunctions
     }//end if
 
     // LUHN ALGORITHM TO CHECK CC NUMBER
-    public static bool IsValid(object value)
+    internal static bool IsValid(object value)
     {
         if (value == null)
         {
@@ -79,7 +79,7 @@ public class CreditCardFunctions
     /// getCardType()
     /// </summary>
     /// <returns>Matches a object reference to regex to bring back a card type, the validity of the card, or a default (Unknown)</returns>
-    public static CreditCardType FindType(string cardNumber)
+    internal static CreditCardType FindType(string cardNumber)
     {
         Regex regAmex = new Regex("^3[47][0-9]{13}$");
         Regex regBCGlobal = new Regex("^(6541|6556)[0-9]{12}$");
