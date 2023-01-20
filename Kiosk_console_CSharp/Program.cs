@@ -322,14 +322,15 @@ static void Main(string[] args)
                     Console.WriteLine("\nEnter 1 to pay with cash");
                     Console.WriteLine("Enter 2 to pay with credit/debit");
                     Console.WriteLine("Enter 3 to add additional items\n");
+                    parseSuccessfull = int.TryParse(selectionString, out userSelection);
                 }
                 else
                 {
-                    //Console.WriteLine("Enter 2 to pay with credit/debit");
+                    Console.WriteLine("Enter 2 to pay with credit/debit");
+                    parseSuccessfull = true;
                     userSelection = 2;
                 }
                 selectionString = Console.ReadLine();
-                parseSuccessfull = int.TryParse(selectionString, out userSelection);
 
             } while (parseSuccessfull == false || !(userSelection == 1 || userSelection == 2 || userSelection == 3));
 
