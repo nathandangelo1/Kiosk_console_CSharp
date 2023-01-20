@@ -7,4 +7,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Reference Include="KioskLibrary">
+      <HintPath>KioskLibrary.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>
