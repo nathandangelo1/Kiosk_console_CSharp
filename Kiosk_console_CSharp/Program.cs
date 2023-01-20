@@ -303,10 +303,12 @@ static void Main(string[] args)
         string? selectionString;
         int userSelection;
         bool parseSuccessfull;
+        decimal total;
         do
         {
             do
             {
+                total = 0M;
                 selectionString = "";
                 userSelection = 0;
                 parseSuccessfull = false;
@@ -341,7 +343,7 @@ static void Main(string[] args)
             }
             else if (userSelection == 3)
             {
-                decimal total = ManageItems(transaction.balance);
+                total = ManageItems(transaction.balance);
                 if (total > 0)
                 {
                     transaction.TransactionAdd(total);
@@ -648,9 +650,9 @@ static void Main(string[] args)
     //    return (0M, 0, false);
     //}
 
-    static decimal ManageItems(decimal prevTotal=0)
+    static decimal ManageItems(decimal previousBalance=0)
     {
-        decimal total = prevTotal;
+        decimal total = previousBalance;
         int itemCount = 1;
         (decimal value, bool escape) itemTuple;
 
@@ -663,21 +665,21 @@ static void Main(string[] args)
             total += itemTuple.value;
 
         } while (itemTuple.escape != true);
-        return total;
+        return total - previousBalance;
     }
     static (decimal, bool) GetItems(int itemCount, decimal total)
     {
         bool parseSuccess;
         bool valid;
         bool escape;
-        string[] splitString;
+        //string[] splitString;
         decimal value;
         do
         {
             parseSuccess = false;
             valid = false;
             escape = false;
-            splitString = Array.Empty<string>();
+            //splitString = Array.Empty<string>();
             string? stringValue = "";
 
             Header("ChangeBot v0.0001", "By NHS Corp");
