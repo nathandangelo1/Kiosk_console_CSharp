@@ -703,6 +703,7 @@ namespace Kiosk_Console_CSharp
             if (cashBackAmount > 0)
             {
                 payment.IsCBrequested = true;
+               
             }
         }
         static void cashAccepted(Transaction transaction, Payment payment, decimal cashAmount)
