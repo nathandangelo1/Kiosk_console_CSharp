@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.4.33205.214
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Kiosk_console_CSharp", "Kiosk_console_CSharp\Kiosk_console_CSharp.csproj", "{1E2BDA98-F86F-4FE7-AA8F-CDA73D1EB665}"
+	ProjectSection(ProjectDependencies) = postProject
+		{21C65E15-2CDB-423B-BC5D-758B272EAE1D} = {21C65E15-2CDB-423B-BC5D-758B272EAE1D}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Kiosk_Logging_CSharp", "Kiosk_Logging_CSharp\Kiosk_Logging_CSharp\Kiosk_Logging_CSharp.csproj", "{21C65E15-2CDB-423B-BC5D-758B272EAE1D}"
 EndProject

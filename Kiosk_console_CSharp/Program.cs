@@ -658,6 +658,7 @@ static void Main(string[] args)
 
         do
         {
+            itemTuple = (0, false);
             itemTuple = GetItems(itemCount, total);
 
             itemCount++;

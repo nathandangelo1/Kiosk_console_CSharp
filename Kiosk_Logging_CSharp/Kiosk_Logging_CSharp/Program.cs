@@ -19,7 +19,7 @@ class KioskLogging
         string day = DateTime.Now.Day.ToString();
 
         string fileName = month + "-" + day + "-" + year + "-" + "Transactions";
-        string path = $@"C:\Users\natha\source\repos\Kiosk_console_CSharp\Kiosk_Logging_CSharp\Kiosk_Logging_CSharp\LOG\{fileName}";
+        string path = $@"C:\Users\POBOYINSAMSARA\source\repos\Kiosk_console_CSharp\Kiosk_Logging_CSharp\Kiosk_Logging_CSharp\LOG\{fileName}";
 
         try
         {
