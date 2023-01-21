@@ -1,8 +1,6 @@
 ﻿using System.Diagnostics;
 
-
 namespace Kiosk_Console_CSharp;
-
 public class Transaction
 {
     internal Guid transactionNumber;
@@ -55,7 +53,7 @@ public class Transaction
 
             if (changeAndCashBackSuccess)
             {
-                WaitForKeyorSeconds(6, "\nTransaction Completed.");
+                Program.Wait(text: "\nTransaction Completed.");
             }
             else
             {
@@ -64,7 +62,7 @@ public class Transaction
         }
         else
         {
-            WaitForKeyorSeconds(3, "\nTransaction Completed.");
+            Program.Wait(text:"\nTransaction Completed.");
         }
     }
     static bool ChangeAndCashBack(Transaction transaction, CashDrawer drawer)
@@ -114,7 +112,6 @@ public class Transaction
             {
                 decimal dispensedAmount = changeCount[i] * drawer.values[i];
 
-                // drawer.cashInDrawer[i] -= dispensedAmount;
                 drawer.DeductCashInDrawer(drawer, dispensedAmount, i);
 
                 if (transaction.IsCBrequested)
@@ -132,11 +129,11 @@ public class Transaction
                 var CP = Console.GetCursorPosition();
                 for (int j = 0; j < changeCount[i]; j++)
                 {
-                    WaitForKeyorSeconds(.5, $"{drawer.values[i]} dispensed");
+                    Program.Wait(text:$"{drawer.values[i]} dispensed");
                 }
             }
         }
-        WaitForKeyorSeconds(text: "\nDon't forget to take your change.");
+        Program.Wait(text: "\nDon't forget to take your change.");
         if (transaction.balance == 0 && transaction.changeOwed == 0 && transaction.cashBackOwed == 0)
         {
             return true;
@@ -145,11 +142,6 @@ public class Transaction
         {
             return false;
         }
-    }
-    static void WaitForKeyorSeconds(double seconds = 5.0, string text = "")
-    {
-        Console.WriteLine(text);
-        Task.Factory.StartNew(() => Console.ReadKey()).Wait(TimeSpan.FromSeconds(seconds));
     }
 
     public static void TransactionLogging(Transaction transaction)

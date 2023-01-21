@@ -44,7 +44,6 @@ public class Payment
             }
             else
             {
-                //drawer.cashInDrawer[cashIn.index] += cashIn.value;
                 drawer.AddCashInDrawer(drawer, cashIn.value, cashIn.index);
                 payment.cashAmount += cashIn.value;
                 transaction.balance -= cashIn.value;
@@ -59,7 +58,7 @@ public class Payment
                 }
                 else if (transaction.balance == 0)
                 {
-                    Program.WaitForKeyorSeconds(3, text: "Thank You!");
+                    Program.Wait(text: "Thank You!");
                 }
             }
         } while (transaction.balance > 0 && earlyExit != true);
@@ -81,7 +80,6 @@ public class Payment
         {
             parseSuccess = false;
             valid = false;
-            string[]? splitString = Array.Empty<string>();
             string? stringValue;
 
             Program.Header("ChangeBot v0.0000015", "By NHS Corp");
@@ -97,7 +95,7 @@ public class Payment
             var CP2 = Console.GetCursorPosition();
             Console.Write("$");
             stringValue = Console.ReadLine();
-            parseSuccess = decimal.TryParse(stringValue, out value);//ERROR VALUE removing period
+            parseSuccess = decimal.TryParse(stringValue, out value);
 
             if (!string.IsNullOrEmpty(stringValue) && parseSuccess)
             {
@@ -111,39 +109,7 @@ public class Payment
                         return (value, denomIndex, false);
                     }
                 }
-                //valid = true;
-                //    if (parseSuccess && stringValue.Contains('.'))
-                //    {
-                //        splitString = stringValue.Split(".");
-                //        if (splitString.Length != 2 || splitString[1].Length != 2)
-                //        {
-                //            valid = false;
-                //           // WriteOver(CP2, seconds: 1);
-                //            continue;
-                //        }
-                //        for (int i = 0; i < drawer.values.Length; i++)
-                //        {
-                //            if (drawer.values[i] == value)
-                //            {
-                //                denomIndex = i;
-                //                valid = true;
-                //                return (value, denomIndex, false);
-                //            }
-                //        }
-                //        if (valid == false)
-                //        {
-                //            //WriteOver(CP2, seconds: 1);
-                //        }
-                //    }
-                //    else if (stringValue == "x")
-                //    {
-                //        return (0M, 0, true);
-                //    }
-                //    else
-                //    {
-                //        valid = false;
-                //        //WriteOver(CP2, seconds: 1);
-                //    }
+                
             }
             else if (stringValue == "x")
             {
