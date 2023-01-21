@@ -31,7 +31,7 @@ public class Transaction
         originalTotal += atotal;
         balance += atotal;
     }
-    public void Closing(Transaction transaction, decimal totalPayments, CashDrawer drawer)
+    public void CloseTransaction(Transaction transaction, decimal totalPayments, CashDrawer drawer)
     {
         if (totalPayments >= transaction.originalTotal + transaction.cashBackReqAmount)
         {
@@ -78,11 +78,11 @@ public class Transaction
             changeTotal = Math.Abs(changeTotal);
 
             int[] changeCounts = new int[13];
-            changeCounted = drawer.GetChangeCounts(changeCounts, changeTotal, drawer);
+            changeCounted = CashDrawer.GetChangeCounts(changeCounts, changeTotal/*, drawer*/);
 
             if (changeCounted)
             {
-                changeGiven = GiveChange(transaction, drawer, changeCounts);
+                changeGiven = GiveChange(transaction, /*drawer,*/ changeCounts);
             }
             else
             {
@@ -104,15 +104,15 @@ public class Transaction
         }
 
     }
-    static bool GiveChange(Transaction transaction, CashDrawer drawer, int[] changeCount) // DISPENSES CHANGE FROM DENOMS IN DRAWER, DEDUCTS VALUE FROM CASHINDRAWER
+    static bool GiveChange(Transaction transaction,/* CashDrawer drawer,*/ int[] changeCount) // DISPENSES CHANGE FROM DENOMS IN DRAWER, DEDUCTS VALUE FROM CASHINDRAWER
     {
         for (int i = 0; i < changeCount.Length; i++)
         {
             if (changeCount[i] > 0)
             {
-                decimal dispensedAmount = changeCount[i] * drawer.values[i];
+                decimal dispensedAmount = changeCount[i] * CashDrawer.values[i];
 
-                drawer.DeductCashInDrawer(drawer, dispensedAmount, i);
+                CashDrawer.DeductCashInDrawer(/*drawer,*/ dispensedAmount, i);
 
                 if (transaction.IsCBrequested)
                 {
@@ -129,7 +129,7 @@ public class Transaction
                 var CP = Console.GetCursorPosition();
                 for (int j = 0; j < changeCount[i]; j++)
                 {
-                    Program.Wait(text:$"{drawer.values[i]} dispensed");
+                    Program.Wait(1000, text:$"{CashDrawer.values[i]} dispensed");
                 }
             }
         }

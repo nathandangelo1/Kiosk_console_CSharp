@@ -11,11 +11,11 @@ public class CashDrawer
 {
     public const decimal pennyDec = .01M, nickelDec = .05M, dimeDec = .10M, quarterDec = .25M, halfdollarDec = .50M, dollarCoinDec = 1.00M, dollarDec = 1.00M, twoDollarDec = 2.00M, fiveDec = 5.00M, tenDec = 10.00M, twentyDec = 20.00M, fiftyDec = 50.00M, hundredDec = 100.00M;
 
-    public readonly decimal[] values = { hundredDec, fiftyDec, twentyDec, tenDec, fiveDec, twoDollarDec, dollarDec, dollarCoinDec, halfdollarDec, quarterDec, dimeDec, nickelDec, pennyDec };
+    public static readonly decimal[] values = { hundredDec, fiftyDec, twentyDec, tenDec, fiveDec, twoDollarDec, dollarDec, dollarCoinDec, halfdollarDec, quarterDec, dimeDec, nickelDec, pennyDec };
 
-    private decimal[] cashInDrawer;
+    private static decimal[] cashInDrawer;
 
-    private decimal _pennies, _nickels, _dimes, _quarters, _halfDollars, _dollarCoins, _dollars, _twoDollars, _fives, _tens, _twenties, _fifties, _hundreds;
+    private static decimal _pennies, _nickels, _dimes, _quarters, _halfDollars, _dollarCoins, _dollars, _twoDollars, _fives, _tens, _twenties, _fifties, _hundreds;
 
     #region //PROPERTIES
     private decimal Pennies
@@ -30,8 +30,16 @@ public class CashDrawer
             {
                 _pennies = value;
             }
-            else
+            else if (value < 0)
+            { 
+                throw new ArgumentException("Not greater than zero ");
+            }
+            else if (value % pennyDec != 0)
             {
+                throw new ArgumentException("Fractional values: Pennies");
+            } else
+            {
+                throw new ArgumentException("Error setting Drawer values.");
             }
         }
     }
@@ -47,9 +55,17 @@ public class CashDrawer
             {
                 _nickels = value;
             }
+            else if (value < 0)
+            {
+                throw new ArgumentException("Not greater than zero ");
+            }
+            else if (value % nickelDec != 0)
+            {
+                throw new ArgumentException("Fractional values: Nickels");
+            }
             else
             {
-                //throw new InvalidMarksException("Sorry, Marks must be less than 100");
+                throw new ArgumentException("Error setting Drawer values.");
             }
         }
     }
@@ -65,6 +81,18 @@ public class CashDrawer
             {
                 _dimes = value;
             }
+            else if (value < 0)
+            {
+                throw new ArgumentException("Not greater than zero ");
+            }
+            else if (value % dimeDec != 0)
+            {
+                throw new ArgumentException("Fractional values: Dimes");
+            }
+            else
+            {
+                throw new ArgumentException("Error setting Drawer values.");
+            }
         }
     }
     private decimal Quarters
@@ -78,6 +106,18 @@ public class CashDrawer
             if (value >= 0 && value % quarterDec == 0)
             {
                 _quarters = value;
+            }
+            else if (value < 0)
+            {
+                throw new ArgumentException("Not greater than zero ");
+            }
+            else if (value % quarterDec != 0)
+            {
+                throw new ArgumentException("Fractional values: Quarters");
+            }
+            else
+            {
+                throw new ArgumentException("Error setting Drawer values.");
             }
         }
     }
@@ -93,6 +133,18 @@ public class CashDrawer
             {
                 _halfDollars = value;
             }
+            else if (value < 0)
+            {
+                throw new ArgumentException("Not greater than zero ");
+            }
+            else if (value % halfdollarDec != 0)
+            {
+                throw new ArgumentException("Fractional values: HalfDollars");
+            }
+            else
+            {
+                throw new ArgumentException("Error setting Drawer values.");
+            }
         }
     }
     private decimal DollarCoins
@@ -106,6 +158,18 @@ public class CashDrawer
             if (value >= 0 && value % dollarCoinDec == 0)
             {
                 _dollarCoins = value;
+            }
+            else if (value < 0)
+            {
+                throw new ArgumentException("Not greater than zero ");
+            }
+            else if (value % dollarCoinDec != 0)
+            {
+                throw new ArgumentException("Fractional values: DollarCoins");
+            }
+            else
+            {
+                throw new ArgumentException("Error setting Drawer values.");
             }
         }
     }
@@ -121,6 +185,18 @@ public class CashDrawer
             {
                 _dollars = value;
             }
+            else if (value < 0)
+            {
+                throw new ArgumentException("Not greater than zero ");
+            }
+            else if (value % dollarDec != 0)
+            {
+                throw new ArgumentException("Fractional values: Dollars");
+            }
+            else
+            {
+                throw new ArgumentException("Error setting Drawer values.");
+            }
         }
     }
     private decimal TwoDollars
@@ -134,6 +210,18 @@ public class CashDrawer
             if (value >= 0 && value % twoDollarDec == 0)
             {
                 _twoDollars = value;
+            }
+            else if (value < 0)
+            {
+                throw new ArgumentException("Not greater than zero ");
+            }
+            else if (value % twoDollarDec != 0)
+            {
+                throw new ArgumentException("Fractional values: TwoDollars");
+            }
+            else
+            {
+                throw new ArgumentException("Error setting Drawer values.");
             }
         }
     }
@@ -149,6 +237,18 @@ public class CashDrawer
             {
                 _fives = value;
             }
+            else if (value < 0)
+            {
+                throw new ArgumentException("Not greater than zero ");
+            }
+            else if (value % fiveDec != 0)
+            {
+                throw new ArgumentException("Fractional values: Fives");
+            }
+            else
+            {
+                throw new ArgumentException("Error setting Drawer values.");
+            }
         }
     }
     private decimal Tens
@@ -163,6 +263,18 @@ public class CashDrawer
             {
                 _tens = value;
             }
+            else if (value < 0)
+            {
+                throw new ArgumentException("Not greater than zero");
+            }
+            else if (value % tenDec != 0)
+            {
+                throw new ArgumentException("Fractional values: Tens");
+            }
+            else
+            {
+                throw new ArgumentException("Error setting Drawer values.");
+            }
         }
     }
     private decimal Twenties
@@ -173,9 +285,21 @@ public class CashDrawer
         }
         set
         {
-            if (value >= 0 && value % pennyDec == 0)
+            if (value >= 0 && value % twentyDec == 0)
             {
                 _twenties = value;
+            }
+            else if (value < 0)
+            {
+                throw new ArgumentException("Not greater than zero ");
+            }
+            else if (value % twentyDec != 0)
+            {
+                throw new ArgumentException("Fractional values: Twenties");
+            }
+            else
+            {
+                throw new ArgumentException("Error setting Drawer values.");
             }
         }
     }
@@ -191,6 +315,18 @@ public class CashDrawer
             {
                 _fifties = value;
             }
+            else if (value < 0)
+            {
+                throw new ArgumentException("Not greater than zero ");
+            }
+            else if (value % fiftyDec != 0)
+            {
+                throw new ArgumentException("Fractional values: Fifties");
+            }
+            else
+            {
+                throw new ArgumentException("Error setting Drawer values.");
+            }
         }
     }
     private decimal Hundreds
@@ -204,6 +340,18 @@ public class CashDrawer
             if (value >= 0 && value % hundredDec == 0)
             {
                 _hundreds = value;
+            }
+            else if (value < 0)
+            {
+                throw new ArgumentException("Not greater than zero ");
+            }
+            else if (value % hundredDec != 0)
+            {
+                throw new ArgumentException("Fractional values: Hundreds");
+            }
+            else
+            {
+                throw new ArgumentException("Error setting Drawer values.");
             }
         }
     }
@@ -219,31 +367,31 @@ public class CashDrawer
         }
         return total;
     }
-    internal void DeductCashInDrawer(CashDrawer drawer, decimal dispensedAmount, int index)
+    internal static void DeductCashInDrawer(/*CashDrawer drawer,*/ decimal dispensedAmount, int index)
     {
-        drawer.cashInDrawer[index] -= dispensedAmount;
+        CashDrawer.cashInDrawer[index] -= dispensedAmount;
     }
-    internal void AddCashInDrawer(CashDrawer drawer, decimal amount, int index)
+    internal static void AddCashToDrawer(/*CashDrawer drawer,*/ decimal amount, int index)
     {
-        drawer.cashInDrawer[index] += amount;
+        CashDrawer.cashInDrawer[index] += amount;
     }
-    internal bool GetChangeCounts(int[] changeCounts, decimal changeAmount, CashDrawer drawer)
+    internal static bool GetChangeCounts(int[] changeCounts, decimal changeAmount/*, CashDrawer drawer*/)
     {
         int temp;
         // FOR EACH INDEX IN VALUES[]
-        for (int i = 0; i < drawer.values.Length; i++)
+        for (int i = 0; i < values.Length; i++)
         {
             //IF QUOTIENT OF CHANGEAMOUNT/VALUES[I] IS GREATER THAN OR EQUAL TO 1   
-            if (changeAmount / drawer.values[i] >= 1)
+            if (changeAmount / values[i] >= 1)
             {
                 //INTEGER DIVISION GIVING THE NUMBER OF TIMES NUM CAN BE DIVIDED BY VALUE
-                temp = (int)(changeAmount / drawer.values[i]);
+                temp = (int)(changeAmount / values[i]);
 
                 //IF THERE IS ENOUGH CHANGE OF DENOM TO MAKE CHANGE
-                if (drawer.cashInDrawer[i] >= temp * drawer.values[i])
+                if (CashDrawer.cashInDrawer[i] >= temp * values[i])
                 {
                     //REDUCE NUM BY (VALUE*TEMP) (EXAMPLE: 1199->199)
-                    changeAmount %= drawer.values[i];
+                    changeAmount %= values[i];
                     //INCREMENT CHANGECOUNTS
                     changeCounts[i] += temp;
                 }
@@ -265,7 +413,6 @@ public class CashDrawer
     // PARAMETERIZED CONSTRUCTORS
     public CashDrawer(decimal pennyTotal = 5.00M, decimal nickelTotal = 8.00M, decimal dimeTotal = 20.00M, decimal quarterTotal = 50.00M, decimal halfdollarTotal = 0.00M, decimal dollarCoinTotal = 0.00M, decimal dollarTotal = 500.00M, decimal twoDollarTotal = 0.00M, decimal fiveTotal = 500.00M, decimal tenTotal = 500.00M, decimal twentyTotal = 1000.00M, decimal fiftyTotal = 0.00M, decimal hundredTotal = 5000.00M)
     {
-        cashInDrawer = new decimal[13];
 
         Pennies = pennyTotal;
         Nickels = nickelTotal;
@@ -281,6 +428,8 @@ public class CashDrawer
         Fifties = fiftyTotal;
         Hundreds = hundredTotal;
 
+        cashInDrawer = new decimal[13];
+        
         cashInDrawer[0] = Hundreds;
         cashInDrawer[1] = Fifties;
         cashInDrawer[2] = Twenties;
@@ -296,47 +445,5 @@ public class CashDrawer
         cashInDrawer[12] = Pennies;
 
     }
-    //OVERLOADED CONSTRUCTOR
-    //public CashDrawer(Denom[] denoms)
-    //{
-    //    cashInDrawer = new decimal[13];
-
-    //    Pennies = denoms[0].Total;
-    //    Nickels = denoms[1].Total;
-    //    Dimes = denoms[2].Total;
-    //    Quarters = denoms[3].Total;
-    //    Halfdollars = denoms[4].Total;
-    //    DollarCoins = denoms[5].Total;
-    //    Dollars = denoms[6].Total;
-    //    TwoDollars = denoms[7].Total;
-    //    Fives = denoms[8].Total;
-    //    Tens = denoms[9].Total;
-    //    Twenties = denoms[10].Total;
-    //    Fifties = denoms[11].Total;
-    //    Hundreds = denoms[12].Total;
-
-    //    cashInDrawer[0] = Hundreds;
-    //    cashInDrawer[1] = Fifties;
-    //    cashInDrawer[2] = Twenties;
-    //    cashInDrawer[3] = Tens;
-    //    cashInDrawer[4] = Fives;
-    //    cashInDrawer[5] = TwoDollars;
-    //    cashInDrawer[6] = Dollars;
-    //    cashInDrawer[7] = DollarCoins;
-    //    cashInDrawer[8] = Halfdollars;
-    //    cashInDrawer[9] = Quarters;
-    //    cashInDrawer[10] = Dimes;
-    //    cashInDrawer[11] = Nickels;
-    //    cashInDrawer[12] = Pennies;
-
-    //}
-
-
-    
-
-
-
-
-
 }
 

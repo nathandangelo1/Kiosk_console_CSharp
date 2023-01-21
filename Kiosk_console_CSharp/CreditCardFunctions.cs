@@ -25,9 +25,9 @@ public class CreditCardFunctions
             else
             {
                 return new string[] { account_number, "declined" };
-            }//end if
-        }//end if
-    }//end if
+            }
+        }
+    }
 
     // LUHN ALGORITHM TO CHECK CC NUMBER
     internal static bool IsValid(object value)
