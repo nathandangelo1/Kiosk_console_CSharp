@@ -1,10 +1,14 @@
 ﻿using System.Globalization;
 
 namespace Kiosk_Console_CSharp;
+public enum PaymentType
+{
+    Cash, Card
+}
 public class Payment
 {
     internal Guid transactionNumber;
-    public DateTime datetime;
+    internal DateTime datetime;
     internal PaymentType paymentType;
     internal bool success;
     private decimal cashAmount;
@@ -33,7 +37,7 @@ public class Payment
         decimal cashBackAmount;
         string? input = "";
 
-        decimal totalCash = drawer.GetTotalCashInDrawer();
+        decimal totalCash = CashDrawer.GetTotalCashInDrawer();
 
         if (transaction.IsCBrequested == false)
         {

@@ -358,7 +358,7 @@ public class CashDrawer
     #endregion// //PROPERTIES
 
     //CLASS METHODS
-    public decimal GetTotalCashInDrawer()
+    internal static decimal GetTotalCashInDrawer()
     {
         decimal total = 0M;
         foreach (var denom in cashInDrawer)

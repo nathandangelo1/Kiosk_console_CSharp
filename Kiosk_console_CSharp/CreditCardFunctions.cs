@@ -131,17 +131,6 @@ public class CreditCardFunctions
             return CreditCardType.Invalid;
     }
 
-    /// <summary>
-    /// isCreditCardAccepted()
-    /// </summary>
-    /// <returns>Checks to see if the credit card is allowed by comparing it to the integer value of CreditCardType to a local array of allowed integers</returns>
-    //public bool isCreditCardAccepted()
-    //{
-    //    // This should honestly be internalized somewhere for security reasons
-    //    int[] allowed = new int[] { 0, 1, 2, 3 };
-    //    return Array.IndexOf(allowed, FindType()) >= 0;
-    //}
-
     public enum CreditCardType
     {
         AmericanExpress,

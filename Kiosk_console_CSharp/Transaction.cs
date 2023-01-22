@@ -134,6 +134,7 @@ public class Transaction
             }
         }
         Program.Wait(text: "\nDon't forget to take your change.");
+
         if (transaction.balance == 0 && transaction.changeOwed == 0 && transaction.cashBackOwed == 0)
         {
             return true;
@@ -178,9 +179,11 @@ public class Transaction
         }
         string arg = transNumber + " " + transDate + " " + transTime + " " + transCash + " " + transChange + " " + transCC;
 
-        ProcessStartInfo startInfo = new ProcessStartInfo();
-        startInfo.FileName = @"C:\Users\POBOYINSAMSARA\source\repos\Kiosk_console_CSharp\Kiosk_Logging_CSharp\Kiosk_Logging_CSharp\bin\Debug\net6.0\Kiosk_Logging_CSharp.exe";
-        startInfo.Arguments = arg;
+        ProcessStartInfo startInfo = new()
+        {
+            FileName = @"C:\Users\POBOYINSAMSARA\source\repos\Kiosk_console_CSharp\Kiosk_Logging_CSharp\Kiosk_Logging_CSharp\bin\Debug\net6.0\Kiosk_Logging_CSharp.exe",
+            Arguments = arg
+        };
         Process.Start(startInfo);
     }
 }
