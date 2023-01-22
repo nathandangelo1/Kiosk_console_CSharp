@@ -94,11 +94,11 @@ public class Program
 
             if (userSelection == 1)
             {
-                Payment.GetCashPayments(transaction, drawer);
+                Payment.ManageCashPayments(transaction, drawer);
             }
             else if (userSelection == 2)
             {
-                Payment.GetCardPayment(transaction, drawer);
+                Payment.GetCardPayment(transaction/*, drawer*/);
             }
             else if (userSelection == 3)
             {
@@ -230,7 +230,7 @@ public class Program
     public static void Header(string title, string subtitle = "")
     {
         Console.Clear();
-        Console.ForegroundColor = ConsoleColor.Gray;
+        Console.ForegroundColor = ConsoleColor.DarkGray;
         Console.WriteLine();
         int windowWidth = 90 - 2;
         string titleContent = string.Format("    ║{0," + ((windowWidth / 2) + (title.Length / 2)) + "}{1," + (windowWidth - (windowWidth / 2) - (title.Length / 2) + 1) + "}", title, "║");

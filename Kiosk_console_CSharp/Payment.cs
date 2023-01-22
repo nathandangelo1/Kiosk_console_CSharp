@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using Windows.ApplicationModel.Email.DataProvider;
 
 namespace Kiosk_Console_CSharp;
 public enum PaymentType
@@ -26,12 +27,12 @@ public class Payment
         paymentType = apaymentType;
     }
 
-    internal static void GetCardPayment(Transaction transaction, CashDrawer drawer)
+    internal static void GetCardPayment(Transaction transaction/*, CashDrawer drawer*/)
     {
         Payment payment = new(transaction.transactionNumber, PaymentType.Card);
         CreditCardFunctions.CreditCardType type;
         string creditCardNumber;
-        string creditCardNumber1 = "4716023102375986";  // Visa
+        string testCCnumber = "4716023102375986";  // Visa
         bool IsValid;
         string[] APIresponse;
         decimal cashBackAmount;
@@ -69,7 +70,7 @@ public class Payment
             creditCardString = creditCardString.Replace("-", "");
             creditCardString = creditCardString.Replace(" ", "");
 
-            creditCardNumber = string.IsNullOrWhiteSpace(creditCardString) ? creditCardNumber1 : creditCardString;
+            creditCardNumber = string.IsNullOrWhiteSpace(creditCardString) ? testCCnumber : creditCardString;
 
             IsValid = CreditCardFunctions.IsValid(creditCardNumber);
 
@@ -142,7 +143,9 @@ public class Payment
         } while (!IsValid && creditCardNumber != "exit");
 
     }
-    public static void GetCashPayments(Transaction transaction, CashDrawer drawer)
+
+    // Handles cash payments
+    public static void ManageCashPayments(Transaction transaction, CashDrawer drawer)
     {
         Payment payment = new Payment(transaction.transactionNumber, PaymentType.Cash);
 
@@ -154,7 +157,7 @@ public class Payment
         do
         {
             earlyExit = false;
-            (decimal value, int index, bool earlyOut) cashIn = ValidateCash(drawer, transaction);
+            (decimal value, int index, bool earlyOut) cashIn = GetCash(drawer, transaction);
             if (cashIn == exit)
             {
                 payment.IsPartialPayment = true;
@@ -187,7 +190,7 @@ public class Payment
 
     }
 
-    static (decimal, int, bool) ValidateCash(CashDrawer drawer, Transaction transaction)
+    static (decimal, int, bool) GetCash(CashDrawer drawer, Transaction transaction)
     {
         bool parseSuccess;
         bool valid;

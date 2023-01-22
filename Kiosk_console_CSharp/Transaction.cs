@@ -164,7 +164,7 @@ public class Transaction
         {
             if (payment.paymentType == PaymentType.Card && payment.declined == false)
             {
-                transCC += payment.ccVendor.ToString() + payment.ccAmount.ToString();
+                transCC += payment.ccVendor.ToString() + "-" + payment.ccAmount.ToString();
             }
             if (transaction.paymentsList.Count > 1)
             {

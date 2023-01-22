@@ -5,7 +5,7 @@ class KioskLogging
     // FUNCTIONS RETURNS MONTH NAME IN ABBREVIATED FORM, EX. AUG
     static string getAbbreviatedName(int month)
     {
-        DateTime date = new DateTime(2020, month, 1);
+        DateTime date = new DateTime(2023, month, 1);
 
         return date.ToString("MMM");
     }
