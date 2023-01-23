@@ -8,46 +8,65 @@ public class Program
     static void Main(string[] args)
     {
         Console.Title = "ChangeBot 3000";
-        CashDrawer drawer = new CashDrawer();
 
-        ColorfulAnimation();
+        //ColorfulAnimation();
+        Robot();
 
+        ConsoleKeyInfo key;
+
+        //Console.ResetColor();
+        Console.WriteLine("\n\n\tPress enter to load application with standard Drawer totals.");
+        Console.WriteLine("\tPress control+F to enter drawer totals", Console.ForegroundColor = ConsoleColor.Black);
+        Console.ResetColor();
+
+        key = Console.ReadKey();
+
+        if (key.Key == ConsoleKey.Enter)
+        {
+            CashDrawer drawer = new CashDrawer();
+        }
+        else if (key.Key == ConsoleKey.F && key.Modifiers.HasFlag(ConsoleModifiers.Control))
+        {
+            CashDrawer drawer = FillCashDrawer();
+        }
+
+        Startup();
+    }
+    static void Startup()
+    {
         while (true)
         {
-            string key = null;
+            ConsoleKeyInfo key;
 
             Header("ChangeBot 3000 v1.1", "By NHS Corp");
-            var CP = Console.GetCursorPosition();
-            
-            while (string.IsNullOrWhiteSpace(key))
+            do
             {
+                var CP = Console.GetCursorPosition();
+                Console.WriteLine("Press Enter to begin transaction.");
+                key = Console.ReadKey(true);
                 Console.SetCursorPosition(CP.Left, CP.Top);
-                Console.WriteLine("Enter 1 to begin transaction.");
-                key = Console.ReadLine();
-            }
-
-            if (key == "1")
-            {
-                TransactionFunction(drawer);
-            }
+            } 
+            while (key.Key != ConsoleKey.Enter);
+  
+            TransactionManager();
         }
     }
 
-    static void TransactionFunction(CashDrawer drawer)
+
+    internal static void TransactionManager() //
     {
         decimal totalPayments;
+        decimal total = ManageItems(); // TOTAL OF ALL ITEMS ENTERED
 
-        decimal total = ManageItems();
-
-        if (total > 0)
+        if (total > 0) // ONLY BEGINS ONCE ITEMS HAVE BEEN ENTERED
         {
-            Transaction transaction = new(total, Guid.NewGuid());
+            Transaction transaction = new(total, Guid.NewGuid()); // CONSTRUCTS NEW TRANSACTION OBJECT
 
-            ManagePayments(transaction, drawer);
+            ManagePayments(transaction); // GETS PAYMENTS
 
-            totalPayments = Payment.TallyTotalPayments(transaction.paymentsList);
+            totalPayments = TallyTotalPayments(transaction.paymentsList); // GETS TOTAL OF ALL PAYMENTS FOR VERIFICATION
 
-            transaction.CloseTransaction(transaction, totalPayments, drawer);
+            Transaction.CloseTransaction(transaction, totalPayments); // 
 
             TransactionsList.Transactions.Add(transaction);
 
@@ -55,34 +74,49 @@ public class Program
         }
     }
 
-    static void ManagePayments(Transaction transaction, CashDrawer drawer)
+    
+    internal static decimal TallyTotalPayments(List<Payment> paymentsList)  // ADDS UP TOTAL AMOUNT OF ALL PAYMENTS
     {
+        decimal total = 0.00M;
+        foreach (var item in paymentsList)
+        {
+            total += item.cashAmount + item.ccAmount;
+        }
+        //Console.WriteLine(bank);
+        return total;
+    }   
+
+    static void ManagePayments(Transaction transaction) // MANAGES CASH AND/OR CARD PAYMENTS, RETURNS WHEN BALANCE IS LESS THAN OR EQUAL TO ZERO
+    {
+
         string? selectionString;
         int userSelection;
         bool parseSuccessfull;
         decimal total;
-        do
+        
+        do // WHILE BALANCE IS GREATER THAN ZERO, CONTINUE REQUESTING PAYMENTS
         {
-            do
+            do // INPUT VALIDATION LOOP
             {
-                total = 0M;
-                selectionString = "";
-                userSelection = 0;
-                parseSuccessfull = false;
-
                 Header("ChangeBot 3000 v1.1", "By NHS Corp");
 
-                Console.WriteLine("Balance Due: " + transaction.balance.ToString("C", CultureInfo.CurrentCulture));
+                Console.Write("Balance Due: ");
+                Console.BackgroundColor = ConsoleColor.White;
+                Console.ForegroundColor = ConsoleColor.Black;
+                Console.WriteLine($" {transaction.balance.ToString("C", CultureInfo.CurrentCulture)} ");
+                Console.ResetColor();
 
-                if (transaction.IsCBrequested == false)
+                if (transaction.IsCBrequested == false) // IF CB NOT REQUESTED, ALL OPTIONS OF PAYMENT AVAILABLE
                 {
                     Console.WriteLine("\nEnter 1 to pay with cash");
                     Console.WriteLine("Enter 2 to pay with credit/debit");
+                    Console.ForegroundColor = ConsoleColor.DarkGray;
                     Console.WriteLine("Enter 3 to add additional items\n");
+                    Console.ResetColor();
                     selectionString = Console.ReadLine();
                     parseSuccessfull = int.TryParse(selectionString, out userSelection);
                 }
-                else
+                else //IF CASHBACK IS REQUESTED, CASH PAYMENTS ARE DISALLOWED PER REQUIREMENTS P.2/R.3
                 {
                     Console.WriteLine("Enter 2 to pay with credit/debit");
                     selectionString = Console.ReadLine();
@@ -92,25 +126,149 @@ public class Program
 
             } while (parseSuccessfull == false || !(userSelection == 1 || userSelection == 2 || userSelection == 3));
 
-            if (userSelection == 1)
+            switch (userSelection)
             {
-                Payment.ManageCashPayments(transaction, drawer);
+                case 1: ManageCashPayments(transaction); break;
+                case 2: GetCardPayment(transaction); break;
+                case 3:
+                    total = ManageItems(transaction.balance);
+                    if (total > 0)
+                    {
+                        transaction.TransactionAddItem(total);
+                    }
+                    break;
             }
-            else if (userSelection == 2)
-            {
-                Payment.GetCardPayment(transaction/*, drawer*/);
-            }
-            else if (userSelection == 3)
-            {
-                total = ManageItems(transaction.balance);
-                if (total > 0)
-                {
-                    transaction.TransactionAdd(total);
-                }
-            }
+
+            //if (userSelection == 1)
+            //{
+            //    ManageCashPayments(transaction);
+            //}
+            //else if (userSelection == 2)
+            //{
+            //    GetCardPayment(transaction);
+            //}
+            //else if (userSelection == 3)
+            //{
+            //    total = ManageItems(transaction.balance);
+            //    if (total > 0)
+            //    {
+            //        transaction.TransactionAddItem(total);
+            //    }
+            //}
         } while (transaction.balance > 0);
     }
 
+    #region // CASH MGMT
+    // Handles cash payments
+    internal static void ManageCashPayments(Transaction transaction/*, CashDrawer drawer*/)
+    {
+        Payment payment = new Payment(transaction.transactionNumber, PaymentType.Cash);
+
+        var exit = (0M, 0, true);
+        bool earlyExit;
+
+        var CP1 = Console.GetCursorPosition();
+
+        do
+        {
+            earlyExit = false;
+            (decimal value, int index, bool earlyOut) cashIn = GetCash(transaction);
+            if (cashIn == exit)
+            {
+                payment.IsPartialPayment = true;
+                earlyExit = true;
+            }
+            else
+            {
+                CashDrawer.AddCashToDrawer(/*drawer,*/ cashIn.value, cashIn.index);
+                payment.cashAmount += cashIn.value;
+                transaction.balance -= cashIn.value;
+                transaction.totalCashReceived += cashIn.value;
+
+                if (transaction.balance > 0)
+                {
+                    var CP2 = Console.GetCursorPosition();
+                    Console.SetCursorPosition(CP1.Left, CP1.Top);
+                    Console.WriteLine($"Amount Remaining: {transaction.balance.ToString("C", CultureInfo.CurrentCulture)}                  ");
+                    Console.SetCursorPosition(CP2.Left, CP2.Top);
+                }
+                else if (transaction.balance == 0)
+                {
+                    Program.Wait(text: "Thank You!");
+                }
+            }
+        } while (transaction.balance > 0 && earlyExit != true);
+
+        payment.success = true;
+
+        transaction.paymentsList.Add(payment);
+
+    }
+
+    internal static (decimal, int, bool) GetCash(Transaction transaction)
+    {
+        bool parseSuccess;
+        bool valid;
+        decimal value;
+        int denomIndex;
+
+        do
+        {
+            parseSuccess = false;
+            valid = false;
+            string? stringValue;
+            denomIndex = 9999;
+
+            Program.Header("ChangeBot 3000 v1.1", "By NHS Corp");
+
+            Console.WriteLine("\n");
+            //var CP = Console.GetCursorPosition();
+            Console.Write($"Amount Due: ");
+            Console.BackgroundColor = ConsoleColor.White;
+            Console.ForegroundColor = ConsoleColor.Black;
+            Console.Write($" { transaction.balance.ToString("C", CultureInfo.CurrentCulture)} \n");
+            Console.ResetColor();
+
+            Console.ResetColor();
+            Console.WriteLine($"Input payment by individual bill or coin value. Cash: $###.##  Coin:  $0.##");
+            Console.WriteLine("(Example: 1.00 for dollar or 0.25 for quarter)");
+
+            Console.WriteLine("\nEnter 'x' to return early\n", Console.ForegroundColor = ConsoleColor.DarkGray);
+            Console.ResetColor();
+            var CP2 = Console.GetCursorPosition();
+            Console.Write("$");
+            stringValue = Console.ReadLine();
+            parseSuccess = decimal.TryParse(stringValue, out value);
+
+            if (!string.IsNullOrEmpty(stringValue) && parseSuccess)
+            {
+                for (int i = 0; i < CashDrawer.values.Length; i++)
+                {
+                    if (CashDrawer.values[i] == value)
+                    {
+                        denomIndex = i;
+                        valid = true;
+                        Console.Beep();
+                        return (value, denomIndex, false);
+                    }
+                }
+            }
+            else if (stringValue == "x")
+            {
+                return (0M, 0, true);
+            }
+            else
+            {
+                valid = false;
+                WriteOver(CP2, message: "Error. Try again.");
+            }
+        } while (valid == false);
+
+        return (0M, 0, false);
+    }
+    #endregion
+
+    #region // CC/CB MGMT
     internal static decimal GetCashBackAmt( decimal totalCash)
     {
         bool parseSuccess;
@@ -161,8 +319,149 @@ public class Program
         return 0M;
     }
 
+    internal static void GetCardPayment(Transaction transaction)
+    {
+        Payment payment = new(transaction.transactionNumber, PaymentType.Card);
+        CreditCardFunctions.CreditCardType type;
+        string creditCardNumber;
+        string testCCnumber = "4716023102375986";  // Visa
+        bool IsValid;
+        string[] APIresponse;
+        decimal cashBackAmount;
+        string? input = "";
 
+        decimal totalCash = CashDrawer.GetTotalCashInDrawer();
 
+        if (transaction.IsCBrequested == false)
+        {
+            Header("ChangeBot 3000 v1.1", "By NHS Corp");
+
+            Console.WriteLine("Cash Back?  y/n");
+            input = Console.ReadLine();
+            if (input == "y")
+            {
+
+                cashBackAmount = GetCashBackAmt(totalCash);
+
+                if (cashBackAmount > 0)
+                {
+                    transaction.IsCBrequested = true;
+                    transaction.cashBackReqAmount = cashBackAmount;
+                    transaction.balance += cashBackAmount;
+                }
+            }
+        }
+
+        do
+        {
+            Header("ChangeBot 3000 v1.1", "By NHS Corp");
+
+            Console.WriteLine("Please enter card number- with or without a dash '-' or space ' ' between segments. Format: 0000-0000-0000-0000\n");
+
+            string? creditCardString = Console.ReadLine();
+            creditCardString = creditCardString.Replace("-", "");
+            creditCardString = creditCardString.Replace(" ", "");
+
+            creditCardNumber = string.IsNullOrWhiteSpace(creditCardString) ? testCCnumber : creditCardString;
+
+            IsValid = CreditCardFunctions.IsValid(creditCardNumber);
+
+            Header("ChangeBot", "By NHS Corp");
+
+            if (IsValid)
+            {
+
+                var CP = Console.GetCursorPosition();
+                ProcessingAnimation();
+                Console.SetCursorPosition(CP.Left, CP.Top);
+
+                string ccDisplay = creditCardNumber[^4..];
+
+                ccDisplay = ccDisplay.PadLeft(16, '*');
+
+                type = CreditCardFunctions.FindType(creditCardNumber);
+
+                APIresponse = CreditCardFunctions.MoneyRequest(creditCardNumber, transaction.balance);
+
+                if (APIresponse[1] == "declined")
+                {
+                    Console.WriteLine("                    Declined                      ");
+                    Console.WriteLine("--------------------------------------------------");
+
+                    Console.WriteLine($"\n{type} {ccDisplay}: Declined Amount: {transaction.balance.ToString("C", CultureInfo.CurrentCulture)}.                              ");
+                    CCdeclined(transaction, payment, type, transaction.balance);
+                    Wait();
+                }
+                else
+                {
+                    bool parseSuccess = decimal.TryParse(APIresponse[1], out decimal approvedAmount);
+                    if (parseSuccess == true && approvedAmount > 0)
+                    {
+                        if (approvedAmount == transaction.balance)
+                        {
+                            Console.WriteLine("             Transaction Approved.               ");
+                            Console.WriteLine("--------------------------------------------------");
+                            Console.WriteLine($"{type} {ccDisplay}: Approved amount: {approvedAmount.ToString("C", CultureInfo.CurrentCulture)}                    ");
+
+                            CCaccepted(transaction, payment, type, approvedAmount);
+                            Wait();
+                        }
+
+                        else if (approvedAmount < transaction.balance)
+                        {
+                            Console.WriteLine("         Transaction Partially Approved:             ");
+                            Console.WriteLine("--------------------------------------------------");
+
+                            Console.WriteLine($"{type} {ccDisplay}: Approved amount: {approvedAmount.ToString("C", CultureInfo.CurrentCulture)}                     ");
+                            Console.WriteLine($"\nAmount remaining: {(transaction.balance - approvedAmount).ToString("C", CultureInfo.CurrentCulture)}         ");
+                            payment.IsPartialPayment = true;
+                            CCaccepted(transaction, payment, type, approvedAmount);
+                            Wait();
+                        }
+                        else
+                        {
+                            Wait(text: "Error- GetCardPayment");
+                        }
+                    }
+                }
+            }
+            else if (creditCardNumber != "exit")
+            {
+                Wait(3000, text: "Card Number Invalid. Re-enter card number or enter \"exit\" to return to payments.");
+            }
+
+        } while (!IsValid && creditCardNumber != "exit");
+
+    }
+
+    internal static void CCaccepted(Transaction transaction, Payment payment, CreditCardFunctions.CreditCardType type, decimal approvedAmount)
+    {
+        payment.success = true;
+        payment.declined = false;
+
+        payment.ccVendor = type;
+        payment.ccAmount = approvedAmount;
+        payment.paymentType = PaymentType.Card;
+
+        transaction.balance -= payment.ccAmount;
+        transaction.totalCCreceived += payment.ccAmount;
+
+        transaction.paymentsList.Add(payment);
+
+    }
+
+    internal static void CCdeclined(Transaction transaction, Payment payment, CreditCardFunctions.CreditCardType type, decimal declinedAmount)
+    {
+        payment.success = false;
+        payment.declined = true;
+
+        payment.ccVendor = type;
+        payment.declinedAmount = declinedAmount;
+        payment.paymentType = PaymentType.Card;
+    }
+    #endregion
+
+    #region// ITEM MGMT
     static decimal ManageItems(decimal previousBalance = 0)
     {
         decimal total = previousBalance;
@@ -181,6 +480,7 @@ public class Program
         } while (itemTuple.escape != true);
         return total - previousBalance;
     }
+
     static (decimal, bool) GetItems(int itemCount, decimal total)
     {
         bool parseSuccess;
@@ -226,7 +526,9 @@ public class Program
 
         return (value, escape);
     }
+    #endregion
 
+    #region// UI/PRESENTATION MGMT
     public static void Header(string title, string subtitle = "")
     {
         Console.Clear();
@@ -268,7 +570,7 @@ public class Program
         }
     }
 
-    //// Given the cursor position of the erroneous line(to write over it), prints error and waits 'seconds'
+    //// Given the cursor position of the line to write over, prints error and waits 'seconds'
     //// Remeber to 'get' cursor position earlier
     public static void WriteOver((int left, int top) cursorPosition, string message = "Error - Try Again", int milliseconds = 1000)
     {
@@ -277,6 +579,13 @@ public class Program
         Console.SetCursorPosition(cursorPosition.left, cursorPosition.top);
         Console.WriteLine("                                                                                 ");
     }
+
+    static void Robot()
+    {
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine("                                  _____\r\n                                 |     |\r\n                                 | | | |\r\n                                 |_____|\r\n                           ____ ___|_|___ ____\r\n                          ()___)         ()___)\r\n                          // /| ChangeBot |\\ \\\\\r\n                         // / |    3000   | \\ \\\\\r\n                        (___) |___________| (___)\r\n                        (___)   (_______)   (___)\r\n                        (___)     (___)     (___)\r\n                        (___)      |_|      (___)\r\n                        (___)  ___/___\\___   | |\r\n                         | |  |           |  | |\r\n                         | |  |___________| /___\\\r\n                        /___\\  |||     ||| //   \\\\\r\n                       //   \\\\ |||     ||| \\\\   //\r\n                       \\\\   // |||     |||  \\\\ //\r\n                        \\\\ // ()__)   (__()\r\n                              ///       \\\\\\\r\n                             ///         \\\\\\\r\n                           _///___     ___\\\\\\_\r\n                          |_______|   |_______|");
+        Console.ResetColor();
+    }
     static void ColorfulAnimation()
     {
         for (int i = 0; i < 1; i++)
@@ -284,7 +593,7 @@ public class Program
             for (int j = 0; j < 20; j++)
             {
                 Console.Clear();
-                Console.WriteLine("LOADING.....");
+                Console.WriteLine("LOADING.....", ConsoleColor.White);
 
                 // steam
                 Console.Write("       . . . . o o o o o o", ConsoleColor.Gray);
@@ -301,10 +610,45 @@ public class Program
                 Console.WriteLine(margin + "       oo    oo  'oo OOOO-| oo\\_", Console.ForegroundColor = ConsoleColor.Blue);
                 Console.WriteLine("   +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+", Console.ForegroundColor = ConsoleColor.White);
                 Console.WriteLine("     (source: www.michalbialecki.com)", Console.ForegroundColor = ConsoleColor.DarkGray);
-                Thread.Sleep(200);
+                Thread.Sleep(100);
+
+
             }
         }
-    }                                                                             
+    }
+    static CashDrawer FillCashDrawer()
+    {
+        Console.WriteLine("Enter Pennies");
+        decimal.TryParse(Console.ReadLine(), out decimal pennies);
+        Console.WriteLine("Enter nickels");
+        decimal.TryParse(Console.ReadLine(), out decimal nickels);
+        Console.WriteLine("Enter dimes");
+        decimal.TryParse(Console.ReadLine(), out decimal dimes);
+        Console.WriteLine("Enter quarters");
+        decimal.TryParse(Console.ReadLine(), out decimal quarters);
+        Console.WriteLine("Enter half-dollars");
+        decimal.TryParse(Console.ReadLine(), out decimal halfdollars);
+        Console.WriteLine("Enter dollar coins");
+        decimal.TryParse(Console.ReadLine(), out decimal dollarcoins);
+        Console.WriteLine("Enter dollar bills");
+        decimal.TryParse(Console.ReadLine(), out decimal dollarbills);
+        Console.WriteLine("Enter two-dollar bills");
+        decimal.TryParse(Console.ReadLine(), out decimal twodollars);
+        Console.WriteLine("Enter fives");
+        decimal.TryParse(Console.ReadLine(), out decimal fives);
+        Console.WriteLine("Enter tens");
+        decimal.TryParse(Console.ReadLine(), out decimal tens);
+        Console.WriteLine("Enter twenties");
+        decimal.TryParse(Console.ReadLine(), out decimal twenties);
+        Console.WriteLine("Enter fifties");
+        decimal.TryParse(Console.ReadLine(), out decimal fifties);
+        Console.WriteLine("Enter Pennies");
+        decimal.TryParse(Console.ReadLine(), out decimal hundreds);
+
+        CashDrawer drawer = new(pennies, nickels, dimes, quarters, halfdollars, dollarcoins, dollarbills, twodollars, fives, tens, twenties, fifties, hundreds);
+        return drawer;
+    }
+    #endregion
 }
 
 

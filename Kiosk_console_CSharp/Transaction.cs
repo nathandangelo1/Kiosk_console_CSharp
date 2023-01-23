@@ -1,7 +1,9 @@
 ﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using Windows.Media.Devices;
 
 namespace Kiosk_Console_CSharp;
-public class Transaction
+internal class Transaction
 {
     internal Guid transactionNumber;
     internal DateTime transactionDateTime;
@@ -9,6 +11,7 @@ public class Transaction
     internal decimal totalCCreceived;
     internal decimal changeOwed;
     internal decimal changeDispensed;
+    internal bool insufficientChange;
 
     internal bool IsCBrequested;
     internal decimal cashBackReqAmount;
@@ -19,80 +22,82 @@ public class Transaction
 
     public List<Payment> paymentsList = new();
 
-    public Transaction(decimal atotal, Guid atransactionNumber)
+    internal Transaction(decimal atotal, Guid atransactionNumber)
     {
         originalTotal = atotal;
         transactionNumber = atransactionNumber;
         transactionDateTime = DateTime.Now;
         balance = atotal;
     }
-    public void TransactionAdd(decimal atotal)
+    internal void TransactionAddItem(decimal atotal)
     {
         originalTotal += atotal;
         balance += atotal;
     }
-    public void CloseTransaction(Transaction transaction, decimal totalPayments, CashDrawer drawer)
+    internal static void CloseTransaction(Transaction transaction, decimal totalPayments)
     {
+        // VERIFIES TOTAL PAYMENTS COVER TOTAL OWED
         if (totalPayments >= transaction.originalTotal + transaction.cashBackReqAmount)
         {
-            if (transaction.IsCBrequested)
+            if (transaction.IsCBrequested) // IF CASHBACK REQUESTED, RECORD AMOUNT *OWED* (-NEG) (NOT YET DISPENSED)
             {
-                transaction.cashBackOwed -= transaction.cashBackReqAmount;
+                transaction.cashBackOwed -= transaction.cashBackReqAmount; // CB AND CHANGE ARE PARALLEL
                 transaction.changeOwed -= transaction.cashBackReqAmount;
             }
-            else
+            else // IF CB NOT REQUESTED, RECORD CHANGE OWED(-NEG), ( MOVES NEGATIVE BALANCE FROM BALANCE TO CHANGE OWED)
             {
                 transaction.changeOwed -= totalPayments - transaction.originalTotal;
-                transaction.balance += Math.Abs(transaction.changeOwed);
+                transaction.balance += Math.Abs(transaction.changeOwed); // ZEROS OUT
             }
         }
-
-        if (transaction.changeOwed < 0)
+        // IF CHANGE IS OWED...
+        if (transaction.changeOwed < 0) 
         {
-            bool changeAndCashBackSuccess = ChangeAndCashBack(transaction, drawer);
+            bool changeAndCashBackSuccess = ChangeAndCashBack(transaction); // CALCULATE AND DISPENSE CHANGE
 
-            if (changeAndCashBackSuccess)
+            if (changeAndCashBackSuccess && !transaction.insufficientChange) // IF NO ERRORS DISPENSING CHANGE
             {
                 Program.Wait(text: "\nTransaction Completed.");
             }
             else
             {
-                Console.WriteLine("\nDispensing Error: TransactionFunction");
+                Console.WriteLine("\nSorry, we don't have enought change for you. Let's find another way to pay :)");
             }
         }
-        else
+        else // IF NO CHANGE OR CB OWED...
         {
             Program.Wait(text:"\nTransaction Completed.");
         }
     }
-    static bool ChangeAndCashBack(Transaction transaction, CashDrawer drawer)
+    static bool ChangeAndCashBack(Transaction transaction)
     {
-        bool insuffChange = false;
         bool changeGiven = false;
         bool changeCounted = false;
 
-        if (transaction.changeOwed < 0)
+        if (transaction.changeOwed < 0) // IF CHANGE OWED..
         {
-            decimal changeTotal = transaction.changeOwed;
-
-            changeTotal = Math.Abs(changeTotal);
+            decimal changeTotal = Math.Abs(transaction.changeOwed); // GET POSITIVE VALUE
 
             int[] changeCounts = new int[13];
-            changeCounted = CashDrawer.GetChangeCounts(changeCounts, changeTotal/*, drawer*/);
 
-            if (changeCounted)
+            changeCounted = CashDrawer.GetChangeCounts(changeCounts, changeTotal); // GET COUNT FOR EACH DENOM TO BE DISPENSED, RETURNS TRUE IF SUFFICIENT CHANGE
+
+            if (changeCounted) // IF SUFFICIENT CHANGE
             {
-                changeGiven = GiveChange(transaction, /*drawer,*/ changeCounts);
+                changeGiven = GiveChange(transaction, changeCounts); // DISPENSE CHANGE
             }
-            else
+            else // IF INSUFFICIENT CHANGE, TRANSACTION RECORDS SHOULD SHOW CHANGE STILL OWED
             {
-                Console.WriteLine("Insufficient Change");
-                insuffChange = true;
+                Console.WriteLine("Insufficient Change, Please find another method of payment");
+                transaction.insufficientChange = true;
+                transaction.changeOwed = -(transaction.totalCashReceived);
+                int[] changeCounts1 = new int[13];
+                changeCounted = CashDrawer.GetChangeCounts(changeCounts1, Math.Abs(transaction.changeOwed));
+                changeGiven = GiveChange(transaction, changeCounts1);
+                transaction.balance += transaction.originalTotal;
+                Program.TransactionManager();
             }
-            if (insuffChange)
-            {
-                Console.WriteLine("Alternatives...");
-            }
+            
         }
         if (changeCounted && changeGiven)
         {
@@ -104,15 +109,18 @@ public class Transaction
         }
 
     }
-    static bool GiveChange(Transaction transaction,/* CashDrawer drawer,*/ int[] changeCount) // DISPENSES CHANGE FROM DENOMS IN DRAWER, DEDUCTS VALUE FROM CASHINDRAWER
-    {
+
+    
+    static bool GiveChange(Transaction transaction,int[] changeCount)
+    { // DISPENSES CHANGE FROM DENOMS IN DRAWER, DEDUCTS VALUE FROM CASHINDRAWER, RETURNS
+
         for (int i = 0; i < changeCount.Length; i++)
         {
             if (changeCount[i] > 0)
             {
                 decimal dispensedAmount = changeCount[i] * CashDrawer.values[i];
 
-                CashDrawer.DeductCashInDrawer(/*drawer,*/ dispensedAmount, i);
+                CashDrawer.DeductFromCashInDrawer(dispensedAmount, i);
 
                 if (transaction.IsCBrequested)
                 {
@@ -126,7 +134,6 @@ public class Transaction
                     transaction.changeDispensed += dispensedAmount;
                 }
 
-                var CP = Console.GetCursorPosition();
                 for (int j = 0; j < changeCount[i]; j++)
                 {
                     Program.Wait(1000, text:$"{CashDrawer.values[i]} dispensed");

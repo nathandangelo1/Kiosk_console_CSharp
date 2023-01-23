@@ -1,12 +1,5 @@
 ﻿namespace Kiosk_Console_CSharp;
 
-//public class TempIsZeroException : Exception
-//{
-//    public FractionalDenomException(string message) : base(message)
-//    {
-//    }
-//}
-
 public class CashDrawer
 {
     public const decimal pennyDec = .01M, nickelDec = .05M, dimeDec = .10M, quarterDec = .25M, halfdollarDec = .50M, dollarCoinDec = 1.00M, dollarDec = 1.00M, twoDollarDec = 2.00M, fiveDec = 5.00M, tenDec = 10.00M, twentyDec = 20.00M, fiftyDec = 50.00M, hundredDec = 100.00M;
@@ -17,8 +10,44 @@ public class CashDrawer
 
     private static decimal _pennies, _nickels, _dimes, _quarters, _halfDollars, _dollarCoins, _dollars, _twoDollars, _fives, _tens, _twenties, _fifties, _hundreds;
 
+    // PARAMETERIZED CONSTRUCTORS
+    public CashDrawer(decimal pennyTotal = 5.00M, decimal nickelTotal = 8.00M, decimal dimeTotal = 20.00M, decimal quarterTotal = 50.00M, decimal halfdollarTotal = 0.00M, decimal dollarCoinTotal = 0.00M, decimal dollarTotal = 500.00M, decimal twoDollarTotal = 0.00M, decimal fiveTotal = 500.00M, decimal tenTotal = 500.00M, decimal twentyTotal = 1000.00M, decimal fiftyTotal = 0.00M, decimal hundredTotal = 5000.00M)
+    {
+
+        Pennies = pennyTotal;
+        Nickels = nickelTotal;
+        Dimes = dimeTotal;
+        Quarters = quarterTotal;
+        Halfdollars = halfdollarTotal;
+        DollarCoins = dollarCoinTotal;
+        Dollars = dollarTotal;
+        TwoDollars = twoDollarTotal;
+        Fives = fiveTotal;
+        Tens = tenTotal;
+        Twenties = twentyTotal;
+        Fifties = fiftyTotal;
+        Hundreds = hundredTotal;
+
+        cashInDrawer = new decimal[13];
+
+        cashInDrawer[0] = Hundreds;
+        cashInDrawer[1] = Fifties;
+        cashInDrawer[2] = Twenties;
+        cashInDrawer[3] = Tens;
+        cashInDrawer[4] = Fives;
+        cashInDrawer[5] = TwoDollars;
+        cashInDrawer[6] = Dollars;
+        cashInDrawer[7] = DollarCoins;
+        cashInDrawer[8] = Halfdollars;
+        cashInDrawer[9] = Quarters;
+        cashInDrawer[10] = Dimes;
+        cashInDrawer[11] = Nickels;
+        cashInDrawer[12] = Pennies;
+
+    }
+
     #region //PROPERTIES
-    private decimal Pennies
+    private static decimal Pennies
     {
         get
         {
@@ -43,7 +72,7 @@ public class CashDrawer
             }
         }
     }
-    private decimal Nickels
+    private static decimal Nickels
     {
         get
         {
@@ -69,7 +98,7 @@ public class CashDrawer
             }
         }
     }
-    private decimal Dimes
+    private static decimal Dimes
     {
         get
         {
@@ -95,7 +124,7 @@ public class CashDrawer
             }
         }
     }
-    private decimal Quarters
+    private static decimal Quarters
     {
         get
         {
@@ -121,7 +150,7 @@ public class CashDrawer
             }
         }
     }
-    private decimal Halfdollars
+    private static decimal Halfdollars
     {
         get
         {
@@ -147,7 +176,7 @@ public class CashDrawer
             }
         }
     }
-    private decimal DollarCoins
+    private static decimal DollarCoins
     {
         get
         {
@@ -173,7 +202,7 @@ public class CashDrawer
             }
         }
     }
-    private decimal Dollars
+    private static decimal Dollars
     {
         get
         {
@@ -199,7 +228,7 @@ public class CashDrawer
             }
         }
     }
-    private decimal TwoDollars
+    private static decimal TwoDollars
     {
         get
         {
@@ -225,7 +254,7 @@ public class CashDrawer
             }
         }
     }
-    private decimal Fives
+    private static decimal Fives
     {
         get
         {
@@ -251,7 +280,7 @@ public class CashDrawer
             }
         }
     }
-    private decimal Tens
+    private static decimal Tens
     {
         get
         {
@@ -277,7 +306,7 @@ public class CashDrawer
             }
         }
     }
-    private decimal Twenties
+    private static decimal Twenties
     {
         get
         {
@@ -303,7 +332,7 @@ public class CashDrawer
             }
         }
     }
-    private decimal Fifties
+    private static decimal Fifties
     {
         get
         {
@@ -329,7 +358,7 @@ public class CashDrawer
             }
         }
     }
-    private decimal Hundreds
+    private static decimal Hundreds
     {
         get
         {
@@ -367,35 +396,34 @@ public class CashDrawer
         }
         return total;
     }
-    internal static void DeductCashInDrawer(/*CashDrawer drawer,*/ decimal dispensedAmount, int index)
+    internal static void DeductFromCashInDrawer(decimal dispensedAmount, int index)
     {
         CashDrawer.cashInDrawer[index] -= dispensedAmount;
     }
-    internal static void AddCashToDrawer(/*CashDrawer drawer,*/ decimal amount, int index)
+    internal static void AddCashToDrawer(decimal amount, int index)
     {
         CashDrawer.cashInDrawer[index] += amount;
     }
-    internal static bool GetChangeCounts(int[] changeCounts, decimal changeAmount/*, CashDrawer drawer*/)
+    internal static bool GetChangeCounts(int[] changeCounts, decimal changeAmount)
     {
-        int temp;
+        int count;
         // FOR EACH INDEX IN VALUES[]
         for (int i = 0; i < values.Length; i++)
         {
-            //IF QUOTIENT OF CHANGEAMOUNT/VALUES[I] IS GREATER THAN OR EQUAL TO 1   
+            //IF QUOTIENT OF CHANGEAMOUNT/VALUES[I] IS GREATER THAN OR EQUAL TO 1    
             if (changeAmount / values[i] >= 1)
             {
                 //INTEGER DIVISION GIVING THE NUMBER OF TIMES NUM CAN BE DIVIDED BY VALUE
-                temp = (int)(changeAmount / values[i]);
+                count = (int)(changeAmount / values[i]);
 
-                //IF THERE IS ENOUGH CHANGE OF DENOM TO MAKE CHANGE
-                if (CashDrawer.cashInDrawer[i] >= temp * values[i])
+                //IF THERE IS ENOUGH OF DENOMINATION TO MAKE CHANGE
+                if (cashInDrawer[i] >= count * values[i])
                 {
                     //REDUCE NUM BY (VALUE*TEMP) (EXAMPLE: 1199->199)
                     changeAmount %= values[i];
                     //INCREMENT CHANGECOUNTS
-                    changeCounts[i] += temp;
+                    changeCounts[i] += count;
                 }
-
             }
         }
         //IF EXACT CHANGE IS POSSIBLE
@@ -410,40 +438,5 @@ public class CashDrawer
 
     }//END GETCHANGECOUNTS
 
-    // PARAMETERIZED CONSTRUCTORS
-    public CashDrawer(decimal pennyTotal = 5.00M, decimal nickelTotal = 8.00M, decimal dimeTotal = 20.00M, decimal quarterTotal = 50.00M, decimal halfdollarTotal = 0.00M, decimal dollarCoinTotal = 0.00M, decimal dollarTotal = 500.00M, decimal twoDollarTotal = 0.00M, decimal fiveTotal = 500.00M, decimal tenTotal = 500.00M, decimal twentyTotal = 1000.00M, decimal fiftyTotal = 0.00M, decimal hundredTotal = 5000.00M)
-    {
-
-        Pennies = pennyTotal;
-        Nickels = nickelTotal;
-        Dimes = dimeTotal;
-        Quarters = quarterTotal;
-        Halfdollars = halfdollarTotal;
-        DollarCoins = dollarCoinTotal;
-        Dollars = dollarTotal;
-        TwoDollars = twoDollarTotal;
-        Fives = fiveTotal;
-        Tens = tenTotal;
-        Twenties = twentyTotal;
-        Fifties = fiftyTotal;
-        Hundreds = hundredTotal;
-
-        cashInDrawer = new decimal[13];
-        
-        cashInDrawer[0] = Hundreds;
-        cashInDrawer[1] = Fifties;
-        cashInDrawer[2] = Twenties;
-        cashInDrawer[3] = Tens;
-        cashInDrawer[4] = Fives;
-        cashInDrawer[5] = TwoDollars;
-        cashInDrawer[6] = Dollars;
-        cashInDrawer[7] = DollarCoins;
-        cashInDrawer[8] = Halfdollars;
-        cashInDrawer[9] = Quarters;
-        cashInDrawer[10] = Dimes;
-        cashInDrawer[11] = Nickels;
-        cashInDrawer[12] = Pennies;
-
-    }
 }
 

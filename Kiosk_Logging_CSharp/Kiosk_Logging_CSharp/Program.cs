@@ -2,14 +2,6 @@
 namespace Kiosk_Logging_CSharp;
 class KioskLogging
 {
-    // FUNCTIONS RETURNS MONTH NAME IN ABBREVIATED FORM, EX. AUG
-    static string getAbbreviatedName(int month)
-    {
-        DateTime date = new DateTime(2023, month, 1);
-
-        return date.ToString("MMM");
-    }
-
     // PROGRAM CREATES TRANSACTIONS LOG
     static void Main(string[] args)
     {
@@ -42,7 +34,13 @@ class KioskLogging
         }
 
     }
+    // FUNCTIONS RETURNS MONTH NAME IN ABBREVIATED FORM, EX. AUG
+    static string getAbbreviatedName(int month)
+    {
+        DateTime date = new DateTime(2023, month, 1);
 
+        return date.ToString("MMM");
+    }
 }
 
 
