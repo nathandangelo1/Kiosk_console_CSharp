@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Security.Cryptography.X509Certificates;
 using Windows.Storage.Provider;
 
 namespace Kiosk_Console_CSharp;
@@ -21,15 +22,16 @@ public class Program
 
         key = Console.ReadKey();
 
-        if (key.Key == ConsoleKey.Enter)
-        {
-            CashDrawer drawer = new CashDrawer();
-        }
-        else if (key.Key == ConsoleKey.F && key.Modifiers.HasFlag(ConsoleModifiers.Control))
+        
+        if (key.Key == ConsoleKey.F && key.Modifiers.HasFlag(ConsoleModifiers.Control))
         {
             CashDrawer drawer = FillCashDrawer();
         }
-
+        else if (key.Key == ConsoleKey.Enter)
+        {
+            CashDrawer drawer = new CashDrawer();
+        }
+        
         Startup();
     }
     static void Startup()
@@ -139,28 +141,12 @@ public class Program
                     break;
             }
 
-            //if (userSelection == 1)
-            //{
-            //    ManageCashPayments(transaction);
-            //}
-            //else if (userSelection == 2)
-            //{
-            //    GetCardPayment(transaction);
-            //}
-            //else if (userSelection == 3)
-            //{
-            //    total = ManageItems(transaction.balance);
-            //    if (total > 0)
-            //    {
-            //        transaction.TransactionAddItem(total);
-            //    }
-            //}
         } while (transaction.balance > 0);
     }
 
     #region // CASH MGMT
     // Handles cash payments
-    internal static void ManageCashPayments(Transaction transaction/*, CashDrawer drawer*/)
+    internal static void ManageCashPayments(Transaction transaction)
     {
         Payment payment = new Payment(transaction.transactionNumber, PaymentType.Cash);
 
@@ -180,7 +166,7 @@ public class Program
             }
             else
             {
-                CashDrawer.AddCashToDrawer(/*drawer,*/ cashIn.value, cashIn.index);
+                CashDrawer.AddCashToDrawer(cashIn.value, cashIn.index);
                 payment.cashAmount += cashIn.value;
                 transaction.balance -= cashIn.value;
                 transaction.totalCashReceived += cashIn.value;
@@ -219,10 +205,9 @@ public class Program
             string? stringValue;
             denomIndex = 9999;
 
-            Program.Header("ChangeBot 3000 v1.1", "By NHS Corp");
+            Header("ChangeBot 3000 v1.1", "By NHS Corp");
 
             Console.WriteLine("\n");
-            //var CP = Console.GetCursorPosition();
             Console.Write($"Amount Due: ");
             Console.BackgroundColor = ConsoleColor.White;
             Console.ForegroundColor = ConsoleColor.Black;
