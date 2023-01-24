@@ -1,6 +1,6 @@
-﻿using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using Windows.Media.Devices;
+﻿
+using System.Diagnostics;
+using System.Transactions;
 
 namespace Kiosk_Console_CSharp;
 internal class Transaction
@@ -24,10 +24,11 @@ internal class Transaction
 
     internal Transaction(decimal atotal, Guid atransactionNumber)
     {
-        originalTotal = atotal;
+        decimal roundedTotal = decimal.Round(atotal, 2, MidpointRounding.AwayFromZero);
+        originalTotal = roundedTotal;
         transactionNumber = atransactionNumber;
         transactionDateTime = DateTime.Now;
-        balance = atotal;
+        balance = roundedTotal;
     }
     internal void TransactionAddItem(decimal atotal)
     {
@@ -55,14 +56,15 @@ internal class Transaction
         {
             bool changeAndCashBackSuccess = ChangeAndCashBack(transaction); // CALCULATE AND DISPENSE CHANGE
 
-            if (changeAndCashBackSuccess && !transaction.insufficientChange) // IF NO ERRORS DISPENSING CHANGE
+            if (changeAndCashBackSuccess) // IF NO ERRORS DISPENSING CHANGE
             {
-                Program.Wait(text: "\nTransaction Completed.");
+                Program.Wait(text: "\nTransaction Completed. Thank You.");
             }
-            else
+            else // IF INSUFFICIENT CHANGE, TRANSACTION RECORDS SHOULD SHOW CHANGE STILL OWED
             {
-                Console.WriteLine("\nSorry, we don't have enought change for you. Let's find another way to pay :)");
+                InsuffChange(transaction);
             }
+
         }
         else // IF NO CHANGE OR CB OWED...
         {
@@ -74,9 +76,9 @@ internal class Transaction
         bool changeGiven = false;
         bool changeCounted = false;
 
-        if (transaction.changeOwed < 0) // IF CHANGE OWED..
+        if (transaction.changeOwed < 0) // IF CHANGE OWED.. (neg)
         {
-            decimal changeTotal = Math.Abs(transaction.changeOwed); // GET POSITIVE VALUE
+            decimal changeTotal = Math.Abs(transaction.changeOwed); // GET ABS(pos) VALUE
 
             int[] changeCounts = new int[13];
 
@@ -86,17 +88,7 @@ internal class Transaction
             {
                 changeGiven = GiveChange(transaction, changeCounts); // DISPENSE CHANGE
             }
-            else // IF INSUFFICIENT CHANGE, TRANSACTION RECORDS SHOULD SHOW CHANGE STILL OWED
-            {
-                Console.WriteLine("Insufficient Change, Please find another method of payment");
-                transaction.insufficientChange = true;
-                transaction.changeOwed = -(transaction.totalCashReceived);
-                int[] changeCounts1 = new int[13];
-                changeCounted = CashDrawer.GetChangeCounts(changeCounts1, Math.Abs(transaction.changeOwed));
-                changeGiven = GiveChange(transaction, changeCounts1);
-                transaction.balance += transaction.originalTotal;
-                Program.TransactionManager();
-            }
+            
             
         }
         if (changeCounted && changeGiven)
@@ -111,14 +103,14 @@ internal class Transaction
     }
 
     
-    static bool GiveChange(Transaction transaction,int[] changeCount)
+    static bool GiveChange(Transaction transaction, int[] changeCount)
     { // DISPENSES CHANGE FROM DENOMS IN DRAWER, DEDUCTS VALUE FROM CASHINDRAWER, RETURNS
 
         for (int i = 0; i < changeCount.Length; i++)
         {
             if (changeCount[i] > 0)
             {
-                decimal dispensedAmount = changeCount[i] * CashDrawer.values[i];
+                decimal dispensedAmount = changeCount[i] * CashDrawer.cashInDrawer[i].decValue;
 
                 CashDrawer.DeductFromCashInDrawer(dispensedAmount, i);
 
@@ -136,7 +128,7 @@ internal class Transaction
 
                 for (int j = 0; j < changeCount[i]; j++)
                 {
-                    Program.Wait(1000, text:$"{CashDrawer.values[i]} dispensed");
+                    Program.Wait(1000, text: $"{CashDrawer.values[i]} dispensed");
                 }
             }
         }
@@ -150,6 +142,37 @@ internal class Transaction
         {
             return false;
         }
+    }
+    internal static void InsuffChange(Transaction transaction)
+    {// IF INSUFFICIENT CHANGE, TRANSACTION RECORDS SHOULD SHOW CHANGE STILL OWED
+        
+        Program.Wait(4000, "Insufficient Change, Please find another method of payment");
+        transaction.insufficientChange = true;
+        transaction.changeOwed = -(transaction.totalCashReceived);
+        for (int i = 0; i <= transaction.paymentsList.Count; i++)
+        {
+            Payment payment = transaction.paymentsList[i];
+            if(payment.paymentType == PaymentType.Cash)
+            {;
+                transaction.paymentsList.RemoveAt(i);
+            }
+        }
+
+        int[] changeCounts1 = new int[13];
+        CashDrawer.GetChangeCounts(changeCounts1, Math.Abs(transaction.changeOwed));
+        GiveChange(transaction, changeCounts1);
+        
+        transaction.balance = transaction.originalTotal - transaction.totalCCreceived;
+        
+        Program.ManagePayments(transaction); // GETS PAYMENTS
+
+        decimal totalPayments = Program.TallyTotalPayments(transaction.paymentsList); // GETS TOTAL OF ALL PAYMENTS FOR VERIFICATION
+
+        Transaction.CloseTransaction(transaction, totalPayments); // 
+
+        //TransactionsList.Transactions.Add(transaction);
+
+        //Transaction.TransactionLogging(transaction);
     }
 
     public static void TransactionLogging(Transaction transaction)

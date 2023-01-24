@@ -1,10 +1,19 @@
 ﻿using System.Text.RegularExpressions;
 
+using System.ComponentModel.DataAnnotations;
+
 namespace Kiosk_Console_CSharp;
 public class CreditCardFunctions
 {
-    // CLASS CODE PROVIDED- NOT WRITTEN
-
+    public enum CreditCardType
+    {
+        AmericanExpress,
+        Discover,
+        Mastercard,
+        Visa,
+        VisaMasterCard,
+        Unknown
+    }
     public static string[] MoneyRequest(string account_number, decimal amount)
     {
         Random rnd = new Random();
@@ -64,29 +73,17 @@ public class CreditCardFunctions
         return checksum % 10 == 0;
     }
 
-    // REGEX EXPRESSIONS TO MATCH CC TYPE
-
-    /// <summary>
-    /// getCardType()
-    /// </summary>
-    /// <returns>Matches a object reference to regex to bring back a card type, the validity of the card, or a default (Unknown)</returns>
+    // REGEX EXPRESSIONS TO MATCH CC TYPE     // https://stackoverflow.com/a/67286217/20159913
     internal static CreditCardType FindType(string cardNumber)
     {
         Regex regAmex = new Regex("^3[47][0-9]{13}$");
-        Regex regCarteBlanche = new Regex("^389[0-9]{11}$");
-        Regex regDinersClub = new Regex("^3(?:0[0-5]|[68][0-9])[0-9]{11}$");
         Regex regDiscover = new Regex("^65[4-9][0-9]{13}|64[4-9][0-9]{13}|6011[0-9]{12}|(622(?:12[6-9]|1[3-9][0-9]|[2-8][0-9][0-9]|9[01][0-9]|92[0-5])[0-9]{10})$");
-        Regex regJCB = new Regex(@"^(?:2131|1800|35\d{3})\d{11}$");
         Regex regMastercard = new Regex("^(5[1-5][0-9]{14}|2(22[1-9][0-9]{12}|2[3-9][0-9]{13}|[3-6][0-9]{14}|7[0-1][0-9]{13}|720[0-9]{12}))$");
         Regex regVisa = new Regex("^4[0-9]{12}(?:[0-9]{3})?$");
         Regex regVisaMasterCard = new Regex("^(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14})$");
 
         if (regAmex.IsMatch(cardNumber))
             return CreditCardType.AmericanExpress;
-        else if (regCarteBlanche.IsMatch(cardNumber))
-            return CreditCardType.CarteBlanche;
-        else if (regDinersClub.IsMatch(cardNumber))
-            return CreditCardType.DinersClub;
         else if (regDiscover.IsMatch(cardNumber))
             return CreditCardType.Discover;
         else if (regMastercard.IsMatch(cardNumber))
@@ -96,19 +93,7 @@ public class CreditCardFunctions
         else if (regVisaMasterCard.IsMatch(cardNumber))
             return CreditCardType.VisaMasterCard;
         else
-            return CreditCardType.Invalid;
-    }
-
-    public enum CreditCardType
-    {
-        AmericanExpress,
-        CarteBlanche,
-        DinersClub,
-        Discover,
-        Mastercard,
-        Visa,
-        VisaMasterCard,
-        Invalid
+            return CreditCardType.Unknown;
     }
 }
 

@@ -1,7 +1,8 @@
 ﻿namespace Kiosk_Console_CSharp;
 
-
-public enum DenomType
+internal class CashDrawer
+{
+    public enum DenomType
 {
     Hundreds = 0,
     Fifties = 1,
@@ -17,28 +18,79 @@ public enum DenomType
     Nickels = 11,
     Pennies = 12
 }
-
-public struct Denom
-{
-    public DenomType type;
-    public decimal total;
-}
-
-public class CashDrawer
-{
-
+    internal struct Denom
+    {
+        internal DenomType type;
+        internal decimal total;
+        internal decimal decValue;
+    }
+    internal static Denom[] cashInDrawer;
+    
     public const decimal pennyDec = .01M, nickelDec = .05M, dimeDec = .10M, quarterDec = .25M, halfdollarDec = .50M, dollarCoinDec = 1.00M, dollarDec = 1.00M, twoDollarDec = 2.00M, fiveDec = 5.00M, tenDec = 10.00M, twentyDec = 20.00M, fiftyDec = 50.00M, hundredDec = 100.00M;
 
     public static readonly decimal[] values = { hundredDec, fiftyDec, twentyDec, tenDec, fiveDec, twoDollarDec, dollarDec, dollarCoinDec, halfdollarDec, quarterDec, dimeDec, nickelDec, pennyDec };
 
-    
-    public static Denom[] cashInDrawer;
-
-    private static Denom _pennies , _nickels, _dimes, _quarters, _halfDollars, _dollarCoins, _dollars, _twoDollars, _fives, _tens, _twenties, _fifties, _hundreds;
+    public static int CashBack;
 
     // PARAMETERIZED CONSTRUCTORS
-    public CashDrawer(decimal pennyTotal = 5.00M, decimal nickelTotal = 8.00M, decimal dimeTotal = 20.00M, decimal quarterTotal = 50.00M, decimal halfdollarTotal = 0.00M, decimal dollarCoinTotal = 0.00M, decimal dollarTotal = 500.00M, decimal twoDollarTotal = 0.00M, decimal fiveTotal = 500.00M, decimal tenTotal = 500.00M, decimal twentyTotal = 1000.00M, decimal fiftyTotal = 0.00M, decimal hundredTotal = 5000.00M)
+    internal CashDrawer(decimal pennyTotal = 5.00M, decimal nickelTotal = 8.00M, decimal dimeTotal = 20.00M, decimal quarterTotal = 50.00M, decimal halfdollarTotal = 0.00M, decimal dollarCoinTotal = 0.00M, decimal dollarTotal = 500.00M, decimal twoDollarTotal = 0.00M, decimal fiveTotal = 500.00M, decimal tenTotal = 500.00M, decimal twentyTotal = 1000.00M, decimal fiftyTotal = 0.00M, decimal hundredTotal = 5000.00M)
     {
+        cashInDrawer = new Denom[13];
+
+        cashInDrawer[0].type = DenomType.Hundreds;
+        cashInDrawer[0].total = hundredTotal;
+        cashInDrawer[0].decValue = hundredDec;
+
+        cashInDrawer[1].type = DenomType.Fifties;
+        cashInDrawer[1].total = fiftyTotal;
+        cashInDrawer[1].decValue = fiftyDec;
+
+        cashInDrawer[2].type = DenomType.Twenties;
+        cashInDrawer[2].total = twentyTotal;
+        cashInDrawer[2].decValue = twentyDec;
+
+        cashInDrawer[3].type = DenomType.Tens;
+        cashInDrawer[3].total = tenTotal;
+        cashInDrawer[3].decValue = twentyDec;
+
+        cashInDrawer[4].type = DenomType.Fives;
+        cashInDrawer[4].total = fiveTotal;
+        cashInDrawer[4].decValue = fiveDec;
+
+        cashInDrawer[5].type = DenomType.Twos;
+        cashInDrawer[5].total = twoDollarTotal;
+        cashInDrawer[5].decValue = twoDollarDec;
+
+        cashInDrawer[6].type = DenomType.Dollars;
+        cashInDrawer[6].total = dollarTotal;
+        cashInDrawer[6].decValue = dollarDec;
+
+        cashInDrawer[7].type = DenomType.DollarCoin;
+        cashInDrawer[7].total = dollarCoinTotal;
+        cashInDrawer[7].decValue = dollarCoinDec;
+
+        cashInDrawer[8].type = DenomType.HalfDollar;
+        cashInDrawer[8].total = halfdollarTotal;
+        cashInDrawer[8].decValue = halfdollarDec;
+
+        cashInDrawer[9].type = DenomType.Quarters;
+        cashInDrawer[9].total = quarterTotal;
+        cashInDrawer[9].decValue = quarterDec;
+
+        cashInDrawer[10].type = DenomType.Dimes;
+        cashInDrawer[10].total = dimeTotal;
+        cashInDrawer[10].decValue = dimeDec;
+
+        cashInDrawer[11].type = DenomType.Nickels;
+        cashInDrawer[11].total = nickelTotal;
+        cashInDrawer[11].decValue = nickelDec;
+
+        cashInDrawer[12].type = DenomType.Pennies;
+        cashInDrawer[12].total = pennyTotal;
+        cashInDrawer[12].decValue = pennyDec;
+
+        #region // not used
+        //private static Denom _pennies , _nickels, _dimes, _quarters, _halfDollars, _dollarCoins, _dollars, _twoDollars, _fives, _tens, _twenties, _fifties, _hundreds;
 
         //_pennies.total = pennyTotal;
         //_nickels.total = nickelTotal;
@@ -53,48 +105,7 @@ public class CashDrawer
         //_twenties.total = twentyTotal;
         //_fifties.total = fiftyTotal;
         //_hundreds.total = hundredTotal;
-
-        cashInDrawer = new Denom[13];
-
-        cashInDrawer[0].type = DenomType.Hundreds;
-        cashInDrawer[0].total = hundredTotal;
-
-        cashInDrawer[1].type = DenomType.Fifties;
-        cashInDrawer[1].total = fiftyTotal;
-
-        cashInDrawer[2].type = DenomType.Twenties;
-        cashInDrawer[2].total = twentyTotal;
-
-        cashInDrawer[3].type = DenomType.Tens;
-        cashInDrawer[3].total = tenTotal;
-
-        cashInDrawer[4].type = DenomType.Fives;
-        cashInDrawer[4].total = fiveTotal;
-
-        cashInDrawer[5].type = DenomType.Twos;
-        cashInDrawer[5].total = twoDollarTotal;
-
-        cashInDrawer[6].type = DenomType.Dollars;
-        cashInDrawer[6].total = dollarTotal;
-
-        cashInDrawer[7].type = DenomType.DollarCoin;
-        cashInDrawer[7].total = dollarCoinTotal;
-
-        cashInDrawer[8].type = DenomType.HalfDollar;
-        cashInDrawer[8].total = halfdollarTotal;
-
-        cashInDrawer[9].type = DenomType.Quarters;
-        cashInDrawer[9].total = quarterTotal;
-
-        cashInDrawer[10].type = DenomType.Dimes;
-        cashInDrawer[10].total = dimeTotal;
-
-        cashInDrawer[11].type = DenomType.Nickels;
-        cashInDrawer[11].total = nickelTotal;
-
-        cashInDrawer[12].type = DenomType.Pennies;
-        cashInDrawer[12].total = pennyTotal;
-
+        #endregion//
     }
 
     //CLASS METHODS
@@ -148,6 +159,41 @@ public class CashDrawer
         }
 
     }//END GETCHANGECOUNTS
+
+    internal static CashDrawer Admin()
+    {
+        Console.WriteLine("Enter Pennies");
+        decimal.TryParse(Console.ReadLine(), out decimal pennies);
+        Console.WriteLine("Enter nickels");
+        decimal.TryParse(Console.ReadLine(), out decimal nickels);
+        Console.WriteLine("Enter dimes");
+        decimal.TryParse(Console.ReadLine(), out decimal dimes);
+        Console.WriteLine("Enter quarters");
+        decimal.TryParse(Console.ReadLine(), out decimal quarters);
+        Console.WriteLine("Enter half-dollars");
+        decimal.TryParse(Console.ReadLine(), out decimal halfdollars);
+        Console.WriteLine("Enter dollar coins");
+        decimal.TryParse(Console.ReadLine(), out decimal dollarcoins);
+        Console.WriteLine("Enter dollar bills");
+        decimal.TryParse(Console.ReadLine(), out decimal dollarbills);
+        Console.WriteLine("Enter two-dollar bills");
+        decimal.TryParse(Console.ReadLine(), out decimal twodollars);
+        Console.WriteLine("Enter fives");
+        decimal.TryParse(Console.ReadLine(), out decimal fives);
+        Console.WriteLine("Enter tens");
+        decimal.TryParse(Console.ReadLine(), out decimal tens);
+        Console.WriteLine("Enter twenties");
+        decimal.TryParse(Console.ReadLine(), out decimal twenties);
+        Console.WriteLine("Enter fifties");
+        decimal.TryParse(Console.ReadLine(), out decimal fifties);
+        Console.WriteLine("Enter Hundreds");
+        decimal.TryParse(Console.ReadLine(), out decimal hundreds);
+
+        int.TryParse(Console.ReadLine(), out CashBack);
+
+        CashDrawer drawer = new(pennies, nickels, dimes, quarters, halfdollars, dollarcoins, dollarbills, twodollars, fives, tens, twenties, fifties, hundreds);
+        return drawer;
+    }
 
     //#region //PROPERTIES
     //public static Denom Pennies

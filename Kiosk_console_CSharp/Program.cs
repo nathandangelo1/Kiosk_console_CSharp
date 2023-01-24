@@ -1,6 +1,4 @@
 ﻿using System.Globalization;
-using System.Security.Cryptography.X509Certificates;
-using Windows.Storage.Provider;
 
 namespace Kiosk_Console_CSharp;
 
@@ -17,15 +15,16 @@ public class Program
 
         //Console.ResetColor();
         Console.WriteLine("\n\n\tPress enter to load application with standard Drawer totals.");
-        Console.WriteLine("\tPress control+F to enter drawer totals", Console.ForegroundColor = ConsoleColor.Black);
+        Console.WriteLine("\tPress control+F to enter totals");
         Console.ResetColor();
 
         key = Console.ReadKey();
 
+
         
         if (key.Key == ConsoleKey.F && key.Modifiers.HasFlag(ConsoleModifiers.Control))
         {
-            CashDrawer drawer = FillCashDrawer();
+            CashDrawer drawer = CashDrawer.Admin();
         }
         else if (key.Key == ConsoleKey.Enter)
         {
@@ -88,7 +87,7 @@ public class Program
         return total;
     }   
 
-    static void ManagePayments(Transaction transaction) // MANAGES CASH AND/OR CARD PAYMENTS, RETURNS WHEN BALANCE IS LESS THAN OR EQUAL TO ZERO
+    internal static void ManagePayments(Transaction transaction) // MANAGES CASH AND/OR CARD PAYMENTS, RETURNS WHEN BALANCE IS LESS THAN OR EQUAL TO ZERO
     {
 
         string? selectionString;
@@ -108,7 +107,7 @@ public class Program
                 Console.WriteLine($" {transaction.balance.ToString("C", CultureInfo.CurrentCulture)} ");
                 Console.ResetColor();
 
-                if (transaction.IsCBrequested == false) // IF CB NOT REQUESTED, ALL OPTIONS OF PAYMENT AVAILABLE
+                if (transaction.IsCBrequested == false && transaction.insufficientChange == false) // IF CB NOT REQUESTED, ALL OPTIONS OF PAYMENT AVAILABLE
                 {
                     Console.WriteLine("\nEnter 1 to pay with cash");
                     Console.WriteLine("Enter 2 to pay with credit/debit");
@@ -264,7 +263,6 @@ public class Program
             Header("ChangeBot 3000 v1.1", "By NHS Corp");
 
             Console.WriteLine("Please enter Cash Back amount in increments of 10. Or enter \"cancel\" to continue payment.");
-            //Console.WriteLine("\nExamples: 10 or 30");
             Console.Write("$: ");
             var CP = Console.GetCursorPosition();
 
@@ -281,7 +279,7 @@ public class Program
                 if (parseSuccess && amount % 10 == 0 && amount < totalCash)
                 {
                     modSuccess = true;
-                    Wait(3000);
+                    Wait(2000);
                     return amount;
                 }
                 else if (amount > totalCash)
@@ -317,7 +315,7 @@ public class Program
 
         decimal totalCash = CashDrawer.GetTotalCashInDrawer();
 
-        if (transaction.IsCBrequested == false)
+        if (transaction.IsCBrequested == false && transaction.insufficientChange == false)
         {
             Header("ChangeBot 3000 v1.1", "By NHS Corp");
 
@@ -349,6 +347,7 @@ public class Program
 
             creditCardNumber = string.IsNullOrWhiteSpace(creditCardString) ? testCCnumber : creditCardString;
 
+            IsValid = CreditCardFunctions.IsValid(creditCardNumber);
             IsValid = CreditCardFunctions.IsValid(creditCardNumber);
 
             Header("ChangeBot", "By NHS Corp");
@@ -481,8 +480,11 @@ public class Program
 
             Header("ChangeBot 3000 v1.1", "By NHS Corp");
             Console.WriteLine("");
-            //var CPbalance = Console.GetCursorPosition();
-            Console.WriteLine($"Balance: {total:C}");
+            Console.Write($"Balance: ");
+            Console.BackgroundColor = ConsoleColor.White;
+            Console.ForegroundColor = ConsoleColor.Black;
+            Console.WriteLine($" {total:C} ");
+            Console.ResetColor();
             Console.WriteLine($"Input item {itemCount}. Format: ###.##  \nPress 'Enter' when finished.");
 
             var CPcursor = Console.GetCursorPosition();
@@ -546,7 +548,6 @@ public class Program
         {
             for (int j = 0; j < 10; j++)
             {
-
                 Console.WriteLine(message += ".");
                 Console.SetCursorPosition(CP.Left, CP.Top);
                 //WaitForKeyorSeconds(seconds, message += ".");
@@ -601,38 +602,7 @@ public class Program
             }
         }
     }
-    static CashDrawer FillCashDrawer()
-    {
-        Console.WriteLine("Enter Pennies");
-        decimal.TryParse(Console.ReadLine(), out decimal pennies);
-        Console.WriteLine("Enter nickels");
-        decimal.TryParse(Console.ReadLine(), out decimal nickels);
-        Console.WriteLine("Enter dimes");
-        decimal.TryParse(Console.ReadLine(), out decimal dimes);
-        Console.WriteLine("Enter quarters");
-        decimal.TryParse(Console.ReadLine(), out decimal quarters);
-        Console.WriteLine("Enter half-dollars");
-        decimal.TryParse(Console.ReadLine(), out decimal halfdollars);
-        Console.WriteLine("Enter dollar coins");
-        decimal.TryParse(Console.ReadLine(), out decimal dollarcoins);
-        Console.WriteLine("Enter dollar bills");
-        decimal.TryParse(Console.ReadLine(), out decimal dollarbills);
-        Console.WriteLine("Enter two-dollar bills");
-        decimal.TryParse(Console.ReadLine(), out decimal twodollars);
-        Console.WriteLine("Enter fives");
-        decimal.TryParse(Console.ReadLine(), out decimal fives);
-        Console.WriteLine("Enter tens");
-        decimal.TryParse(Console.ReadLine(), out decimal tens);
-        Console.WriteLine("Enter twenties");
-        decimal.TryParse(Console.ReadLine(), out decimal twenties);
-        Console.WriteLine("Enter fifties");
-        decimal.TryParse(Console.ReadLine(), out decimal fifties);
-        Console.WriteLine("Enter Pennies");
-        decimal.TryParse(Console.ReadLine(), out decimal hundreds);
-
-        CashDrawer drawer = new(pennies, nickels, dimes, quarters, halfdollars, dollarcoins, dollarbills, twodollars, fives, tens, twenties, fifties, hundreds);
-        return drawer;
-    }
+    
     #endregion
 }
 

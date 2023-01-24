@@ -1,4 +1,6 @@
-﻿
+﻿using System.Globalization;
+
+
 namespace Kiosk_Console_CSharp;
 public enum PaymentType
 {
@@ -6,17 +8,17 @@ public enum PaymentType
 }
 public class Payment
 {
-    internal Guid transactionNumber;
+    public Guid transactionNumber;
     internal DateTime datetime;
     internal PaymentType paymentType;
     internal bool success;
     internal decimal cashAmount;
 
-    //internal CreditCardFunctions.CreditCardType? ccVendor;
-    //internal decimal ccAmount;
-    //internal bool declined;
-    //internal decimal declinedAmount;
-    //internal bool IsPartialPayment;
+    internal CreditCardFunctions.CreditCardType? ccVendor;
+    internal decimal ccAmount;
+    internal bool declined;
+    internal decimal declinedAmount;
+    internal bool IsPartialPayment;
 
     public Payment(Guid atransactionNumber, PaymentType apaymentType)
     {
@@ -24,21 +26,8 @@ public class Payment
         datetime = DateTime.Now;
         paymentType = apaymentType;
     }
+
 }
 
-public class CardPayment : Payment
-{
-    internal CreditCardFunctions.CreditCardType? ccVendor;
-    internal decimal ccAmount;
-    internal bool declined;
-    internal decimal declinedAmount;
-    internal bool IsPartialPayment;
-    public CardPayment(Guid atransactionNumber, PaymentType apaymentType)
-    {
-        transactionNumber = atransactionNumber;
-        datetime = DateTime.Now;
-        paymentType = apaymentType;
-    }
-}
 
 
